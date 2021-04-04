@@ -103,7 +103,7 @@ Color lerpGradient(List<Color> colors, List<double> stops, double t) {
 /// then we round that number by finding nearest number in this pattern:
 /// 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 5000, 10000,...
 double getEfficientInterval(double axisViewSize, double diffInYAxis,
-    {double pixelPerInterval = 10}) {
+    {double pixelPerInterval = 30}) {
   final allowedCount = axisViewSize ~/ pixelPerInterval;
   final accurateInterval = diffInYAxis / allowedCount;
   return _roundInterval(accurateInterval).toDouble();
@@ -123,7 +123,9 @@ int _roundInterval(double input) {
 
   final scaled = input >= 10 ? input.round() / 10 : input;
 
-  if (scaled >= 2.6) {
+  if (scaled >= 5.6) {
+    return 10 * pow(10, count).toInt();
+  } else if (scaled >= 2.6) {
     return 5 * pow(10, count).toInt();
   } else if (scaled >= 1.6) {
     return 2 * pow(10, count).toInt();
