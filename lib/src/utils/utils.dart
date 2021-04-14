@@ -123,11 +123,11 @@ int _roundInterval(double input) {
 
   final scaled = input >= 10 ? input.round() / 10 : input;
 
-  if (scaled >= 5.6) {
+  if (scaled >= 5.5) {
     return 10 * pow(10, count).toInt();
-  } else if (scaled >= 2.6) {
+  } else if (scaled >= 2.5) {
     return 5 * pow(10, count).toInt();
-  } else if (scaled >= 1.6) {
+  } else if (scaled >= 1.5) {
     return 2 * pow(10, count).toInt();
   } else {
     return pow(10, count).toInt();
