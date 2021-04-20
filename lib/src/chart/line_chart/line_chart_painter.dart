@@ -291,7 +291,10 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
 
     for (var i = 0; i < barData.showingIndicators.length; i++) {
       final indicatorData = indicatorsData[i];
-      final index = barData.showingIndicators[i];
+      var index = barData.showingIndicators[i];
+      if (index >= barData.spots.length) {
+        index = barData.spots.length - 1;
+      }
       final spot = barData.spots[index];
 
       if (indicatorData == null) {
@@ -307,7 +310,7 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
       late FlDotPainter dotPainter;
 
       if (showingDots) {
-        final xPercentInLine = ((touchedSpot.dx - getLeftOffsetDrawSize(holder)) / barXDelta) * 100;
+        final xPercentInLine = ((touchedSpot.dx) / barXDelta) * 100;
         dotPainter =
             indicatorData.touchedSpotDotData.getDotPainter(spot, xPercentInLine, barData, index);
         dotHeight = dotPainter.getSize(spot).height;
