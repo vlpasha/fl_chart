@@ -1,405 +1,169 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class LineChartSample1 extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() => LineChartSample1State();
+class RealTimeChartPoint {
+  final double value;
+  final double timestamp;
+  RealTimeChartPoint(this.value, this.timestamp);
 }
 
-class LineChartSample1State extends State<LineChartSample1> {
-  bool isShowingMainData;
+class RealTimeChart extends StatefulWidget {
+  static List<FlSpot> toSpots(List<RealTimeChartPoint> data) => data
+      .map((item) => FlSpot(
+            item.timestamp,
+            item.value,
+          ))
+      .toList();
+
+  final Stream<List<List<FlSpot>>> dataStream;
+  RealTimeChart({
+    Key key,
+    @required this.dataStream,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _RealTimeChartState();
+}
+
+class _RealTimeChartState extends State<RealTimeChart> {
+  StreamSubscription _subscr;
+  List<FlSpot> _spots0 = [FlSpot(0, 0)];
+  List<FlSpot> _spots1 = [FlSpot(0, 0)];
+  List<FlSpot> _spots2 = [FlSpot(0, 0)];
+  double _minX;
+  double _maxX;
 
   @override
   void initState() {
+    _subscr = widget.dataStream.listen((event) => setState(() {
+          _minX = event.isNotEmpty ? event[0].first.x : 0;
+          _maxX = event.isNotEmpty ? event[0].last.x : 0;
+          _spots0 = event[0];
+          _spots1 = event[1];
+          _spots2 = event[2];
+        }));
     super.initState();
-    isShowingMainData = true;
+  }
+
+  @override
+  void dispose() {
+    _subscr.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1.23,
+      aspectRatio: 1.0,
       child: Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(18)),
-          gradient: LinearGradient(
-            colors: [
-              Color(0xff2c274c),
-              Color(0xff46426c),
-            ],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-        ),
-        child: Stack(
-          children: <Widget>[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                const SizedBox(
-                  height: 37,
-                ),
-                const Text(
-                  'Unfold Shop 2018',
-                  style: TextStyle(
-                    color: Color(0xff827daa),
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(
-                  height: 4,
-                ),
-                const Text(
-                  'Monthly Sales',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(
-                  height: 37,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 16.0, left: 6.0),
-                    child: LineChart(
-                      isShowingMainData ? sampleData1() : sampleData2(),
-                      swapAnimationDuration: const Duration(milliseconds: 250),
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-              ],
+        padding: const EdgeInsets.only(top: 20, right: 20),
+        child: ScopeChart(
+          data: ScopeChartData(
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: true,
+              drawHorizontalLine: true,
             ),
-            IconButton(
-              icon: Icon(
-                Icons.refresh,
-                color: Colors.white.withOpacity(isShowingMainData ? 1.0 : 0.5),
+            axisTitleData: FlAxisTitleData(
+              leftTitle: AxisTitle(showTitle: true, titleText: ''),
+              bottomTitle: AxisTitle(showTitle: true, titleText: 'mSec'),
+            ),
+            titlesData: FlTitlesData(
+              show: true,
+              bottomTitles: SideTitles(
+                showTitles: true,
+                getTitles: (value) => value.toStringAsFixed(0),
               ),
-              onPressed: () {
-                setState(() {
-                  isShowingMainData = !isShowingMainData;
-                });
-              },
-            )
-          ],
+              leftTitles: SideTitles(
+                showTitles: true,
+                getTitles: (value) => value.toStringAsFixed(0),
+              ),
+            ),
+            minX: _minX,
+            maxX: _maxX,
+            minY: -1000,
+            maxY: 1000,
+            lineBarsData: [
+              ScopeChartBarData(
+                spots: _spots0,
+                isCurved: false,
+                color: Colors.red,
+              ),
+              ScopeChartBarData(
+                spots: _spots1,
+                isCurved: false,
+                color: Colors.blue,
+              ),
+              ScopeChartBarData(
+                spots: _spots2,
+                isCurved: false,
+                color: Colors.green,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-  LineChartData sampleData1() {
-    return LineChartData(
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
-        ),
-        touchCallback: (LineTouchResponse touchResponse) {},
-        handleBuiltInTouches: true,
-      ),
-      gridData: FlGridData(
-        show: false,
-      ),
-      titlesData: FlTitlesData(
-        bottomTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 22,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff72719b),
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-          margin: 10,
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 2:
-                return 'SEPT';
-              case 7:
-                return 'OCT';
-              case 12:
-                return 'DEC';
-            }
-            return '';
-          },
-        ),
-        leftTitles: SideTitles(
-          showTitles: true,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff75729e),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 1:
-                return '1m';
-              case 2:
-                return '2m';
-              case 3:
-                return '3m';
-              case 4:
-                return '5m';
-            }
-            return '';
-          },
-          margin: 8,
-          reservedSize: 30,
-        ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: const Border(
-          bottom: BorderSide(
-            color: Color(0xff4e4965),
-            width: 4,
-          ),
-          left: BorderSide(
-            color: Colors.transparent,
-          ),
-          right: BorderSide(
-            color: Colors.transparent,
-          ),
-          top: BorderSide(
-            color: Colors.transparent,
-          ),
-        ),
-      ),
-      minX: 0,
-      maxX: 14,
-      maxY: 4,
-      minY: 0,
-      lineBarsData: linesBarData1(),
-    );
+class LineChartSample1 extends StatefulWidget {
+  @override
+  _LineChartSample1State createState() => _LineChartSample1State();
+}
+
+class _LineChartSample1State extends State<LineChartSample1> {
+  List<RealTimeChartPoint> points0 = [];
+  List<RealTimeChartPoint> points1 = [];
+  List<RealTimeChartPoint> points2 = [];
+  var rnd = Random();
+  double radians = 0.0;
+
+  int startTime = 0;
+  final StreamController<List<List<FlSpot>>> _stream = StreamController();
+
+  final maxPoints = 200;
+
+  void _addPoint(List<RealTimeChartPoint> points, double offset) {
+    var sv = sin((radians * pi + offset));
+
+    if (points.length == maxPoints) {
+      points.removeAt(0);
+    }
+    points.add(RealTimeChartPoint(sv * 1000, startTime.toDouble()));
   }
 
-  List<LineChartBarData> linesBarData1() {
-    final LineChartBarData lineChartBarData1 = LineChartBarData(
-      spots: [
-        FlSpot(1, 1),
-        FlSpot(3, 1.5),
-        FlSpot(5, 1.4),
-        FlSpot(7, 3.4),
-        FlSpot(10, 2),
-        FlSpot(12, 2.2),
-        FlSpot(13, 1.8),
-      ],
-      isCurved: true,
-      colors: [
-        const Color(0xff4af699),
-      ],
-      barWidth: 8,
-      isStrokeCapRound: true,
-      dotData: FlDotData(
-        show: false,
-      ),
-      belowBarData: BarAreaData(
-        show: false,
-      ),
-    );
-    final LineChartBarData lineChartBarData2 = LineChartBarData(
-      spots: [
-        FlSpot(1, 1),
-        FlSpot(3, 2.8),
-        FlSpot(7, 1.2),
-        FlSpot(10, 2.8),
-        FlSpot(12, 2.6),
-        FlSpot(13, 3.9),
-      ],
-      isCurved: true,
-      colors: [
-        const Color(0xffaa4cfc),
-      ],
-      barWidth: 8,
-      isStrokeCapRound: true,
-      dotData: FlDotData(
-        show: false,
-      ),
-      belowBarData: BarAreaData(show: false, colors: [
-        const Color(0x00aa4cfc),
-      ]),
-    );
-    final LineChartBarData lineChartBarData3 = LineChartBarData(
-      spots: [
-        FlSpot(1, 2.8),
-        FlSpot(3, 1.9),
-        FlSpot(6, 3),
-        FlSpot(10, 1.3),
-        FlSpot(13, 2.5),
-      ],
-      isCurved: true,
-      colors: const [
-        Color(0xff27b6fc),
-      ],
-      barWidth: 8,
-      isStrokeCapRound: true,
-      dotData: FlDotData(
-        show: false,
-      ),
-      belowBarData: BarAreaData(
-        show: false,
-      ),
-    );
-    return [
-      lineChartBarData1,
-      lineChartBarData2,
-      lineChartBarData3,
-    ];
+  @override
+  void initState() {
+    for (var i = 0; i < maxPoints; i++) {
+      points0.add(RealTimeChartPoint(0, startTime.toDouble()));
+      points1.add(RealTimeChartPoint(0, startTime.toDouble()));
+      points2.add(RealTimeChartPoint(0, startTime.toDouble()));
+      startTime++;
+    }
+    Timer.periodic(Duration(milliseconds: 30), (timer) {
+      _addPoint(points0, 0);
+      _addPoint(points1, 1);
+      _addPoint(points2, 2);
+      startTime++;
+      radians += 0.05;
+      if (radians >= 2.0) {
+        radians = 0.0;
+      }
+      _stream.add([
+        RealTimeChart.toSpots(points0),
+        RealTimeChart.toSpots(points1),
+        RealTimeChart.toSpots(points2)
+      ]);
+    });
+    super.initState();
   }
 
-  LineChartData sampleData2() {
-    return LineChartData(
-      lineTouchData: LineTouchData(
-        enabled: false,
-      ),
-      gridData: FlGridData(
-        show: false,
-      ),
-      titlesData: FlTitlesData(
-        bottomTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 22,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff72719b),
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-          margin: 10,
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 2:
-                return 'SEPT';
-              case 7:
-                return 'OCT';
-              case 12:
-                return 'DEC';
-            }
-            return '';
-          },
-        ),
-        leftTitles: SideTitles(
-          showTitles: true,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff75729e),
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 1:
-                return '1m';
-              case 2:
-                return '2m';
-              case 3:
-                return '3m';
-              case 4:
-                return '5m';
-              case 5:
-                return '6m';
-            }
-            return '';
-          },
-          margin: 8,
-          reservedSize: 30,
-        ),
-      ),
-      borderData: FlBorderData(
-          show: true,
-          border: const Border(
-            bottom: BorderSide(
-              color: Color(0xff4e4965),
-              width: 4,
-            ),
-            left: BorderSide(
-              color: Colors.transparent,
-            ),
-            right: BorderSide(
-              color: Colors.transparent,
-            ),
-            top: BorderSide(
-              color: Colors.transparent,
-            ),
-          )),
-      minX: 0,
-      maxX: 14,
-      maxY: 6,
-      minY: 0,
-      lineBarsData: linesBarData2(),
-    );
-  }
-
-  List<LineChartBarData> linesBarData2() {
-    return [
-      LineChartBarData(
-        spots: [
-          FlSpot(1, 1),
-          FlSpot(3, 4),
-          FlSpot(5, 1.8),
-          FlSpot(7, 5),
-          FlSpot(10, 2),
-          FlSpot(12, 2.2),
-          FlSpot(13, 1.8),
-        ],
-        isCurved: true,
-        curveSmoothness: 0,
-        colors: const [
-          Color(0x444af699),
-        ],
-        barWidth: 4,
-        isStrokeCapRound: true,
-        dotData: FlDotData(
-          show: false,
-        ),
-        belowBarData: BarAreaData(
-          show: false,
-        ),
-      ),
-      LineChartBarData(
-        spots: [
-          FlSpot(1, 1),
-          FlSpot(3, 2.8),
-          FlSpot(7, 1.2),
-          FlSpot(10, 2.8),
-          FlSpot(12, 2.6),
-          FlSpot(13, 3.9),
-        ],
-        isCurved: true,
-        colors: const [
-          Color(0x99aa4cfc),
-        ],
-        barWidth: 4,
-        isStrokeCapRound: true,
-        dotData: FlDotData(
-          show: false,
-        ),
-        belowBarData: BarAreaData(show: true, colors: [
-          const Color(0x33aa4cfc),
-        ]),
-      ),
-      LineChartBarData(
-        spots: [
-          FlSpot(1, 3.8),
-          FlSpot(3, 1.9),
-          FlSpot(6, 5),
-          FlSpot(10, 3.3),
-          FlSpot(13, 4.5),
-        ],
-        isCurved: true,
-        curveSmoothness: 0,
-        colors: const [
-          Color(0x4427b6fc),
-        ],
-        barWidth: 2,
-        isStrokeCapRound: true,
-        dotData: FlDotData(show: true),
-        belowBarData: BarAreaData(
-          show: false,
-        ),
-      ),
-    ];
+  @override
+  Widget build(BuildContext context) {
+    return RealTimeChart(dataStream: _stream.stream);
   }
 }
