@@ -388,33 +388,37 @@ class ScopeChartPainter extends AxisChartPainter<ScopeChartData> {
 
     // Bottom titles
     final bottomTitles = targetData.titlesData.bottomTitles;
-    final bottomInterval =
-        bottomTitles.interval ?? getEfficientInterval(viewSize.width, data.horizontalDiff);
+
     if (bottomTitles.showTitles) {
       var horizontalSeek = data.minX;
       while (horizontalSeek <= data.maxX) {
+        final text = bottomTitles.getTitles(horizontalSeek);
+        final span = TextSpan(style: bottomTitles.getTextStyles(horizontalSeek), text: text);
+        final tp = TextPainter(
+            text: span,
+            textAlign: TextAlign.center,
+            textDirection: bottomTitles.textDirection,
+            textScaleFactor: holder.textScale);
+        tp.layout();
+
+        final bottomInterval = bottomTitles.interval ??
+            getEfficientInterval(viewSize.width, data.horizontalDiff,
+                pixelPerInterval: tp.width * 2);
         if (bottomTitles.checkToShowTitle(
             data.minX, data.maxX, bottomTitles, bottomInterval, horizontalSeek)) {
           var x = getPixelX(horizontalSeek, viewSize, holder);
-          var y = viewSize.height + getTopOffsetDrawSize(holder);
-          final text = bottomTitles.getTitles(horizontalSeek);
-          final span = TextSpan(style: bottomTitles.getTextStyles(horizontalSeek), text: text);
-          final tp = TextPainter(
-              text: span,
-              textAlign: TextAlign.center,
-              textDirection: bottomTitles.textDirection,
-              textScaleFactor: holder.textScale);
-          tp.layout();
-
-          x -= tp.width / 2;
-          y += bottomTitles.margin;
-          canvasWrapper.save();
-          canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
-          canvasWrapper.rotate(radians(bottomTitles.rotateAngle));
-          canvasWrapper.translate(-(x + tp.width / 2), -(y + tp.height / 2));
-          x += translateRotatedPosition(tp.width, bottomTitles.rotateAngle);
-          canvasWrapper.drawText(tp, Offset(x, y));
-          canvasWrapper.restore();
+          if (viewSize.width - x >= tp.width / 2) {
+            var y = viewSize.height + getTopOffsetDrawSize(holder);
+            x -= tp.width / 2;
+            y += bottomTitles.margin;
+            canvasWrapper.save();
+            canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
+            canvasWrapper.rotate(radians(bottomTitles.rotateAngle));
+            canvasWrapper.translate(-(x + tp.width / 2), -(y + tp.height / 2));
+            x += translateRotatedPosition(tp.width, bottomTitles.rotateAngle);
+            canvasWrapper.drawText(tp, Offset(x, y));
+            canvasWrapper.restore();
+          }
         }
 
         if (data.maxX - horizontalSeek < bottomInterval && data.maxX != horizontalSeek) {
