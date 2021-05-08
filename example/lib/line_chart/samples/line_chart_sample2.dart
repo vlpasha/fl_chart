@@ -1,5 +1,124 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+
+class EcuFpeActuatorTempPoint {
+  final int temp;
+  final Duration duration;
+  EcuFpeActuatorTempPoint(this.temp, this.duration);
+}
+
+class ActTempHistoryChart extends StatelessWidget {
+  List<FlSpot> _spots;
+  final List<Color> _colors = [
+    Colors.blue,
+    Colors.yellow,
+    Colors.yellow,
+    Colors.red,
+  ];
+  List<double> _stops;
+  double _minX;
+  double _maxX;
+  double _minY;
+  double _maxY;
+
+  final double tempLow = 135.0;
+  final double tempHigh = 150.0;
+
+  ActTempHistoryChart({
+    Key key,
+    @required List<EcuFpeActuatorTempPoint> data,
+  }) : super(key: key) {
+    _spots = data
+        .map((item) => FlSpot(
+              item.temp.toDouble(),
+              item.duration.inMinutes.toDouble(),
+            ))
+        .toList();
+    _spots.sort((a, b) => a.x.compareTo(b.x));
+    _minX = _spots.first.x;
+    _maxX = _spots.last.x;
+    _stops = _calcStops(tempLow, tempHigh, _minX, _maxX);
+  }
+
+  List<double> _calcStops(double low, double high, double min, double max) {
+    var lowToMedStop = (low - min) / (max - min);
+    var medTohighStop = (high - min) / (max - min);
+    return [lowToMedStop, lowToMedStop, medTohighStop, medTohighStop];
+  }
+
+  String _getLeftAxisTitles(double value) {
+    if (value > 9999 && value <= 999999) {
+      final tick = value / 1000;
+      final round = tick.truncateToDouble() == tick ? 0 : 2;
+      return '${tick.toStringAsFixed(round)}K';
+    } else if (value > 999999) {
+      final tick = value / 1000000;
+      final round = tick.truncateToDouble() == tick ? 0 : 2;
+      return '${tick.toStringAsFixed(round)}M';
+    }
+
+    return value.toStringAsFixed(0);
+  }
+
+  LineChartData _mainData() {
+    return LineChartData(
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+      ),
+      axisTitleData: FlAxisTitleData(
+        leftTitle: AxisTitle(showTitle: true, titleText: 'Minutes'),
+        bottomTitle: AxisTitle(showTitle: true, titleText: '°C'),
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        bottomTitles: SideTitles(
+          showTitles: true,
+          getTitles: (value) => value.toStringAsFixed(0),
+        ),
+        leftTitles: SideTitles(
+          showTitles: true,
+          getTitles: _getLeftAxisTitles,
+        ),
+      ),
+      minX: _minX,
+      maxX: _maxX,
+      minY: 0,
+      lineBarsData: [
+        LineChartBarData(
+          spots: _spots,
+          isCurved: false,
+          isStepLineChart: true,
+          colorStops: _stops,
+          colors: _colors,
+          barWidth: 1,
+          isStrokeCapRound: false,
+          dotData: FlDotData(
+            show: true,
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            gradientColorStops: _stops,
+            colors: _colors,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        padding: const EdgeInsets.only(top: 20, right: 20),
+        child: LineChart(_mainData()),
+      ),
+    );
+  }
+}
 
 class LineChartSample2 extends StatefulWidget {
   @override
@@ -7,240 +126,19 @@ class LineChartSample2 extends StatefulWidget {
 }
 
 class _LineChartSample2State extends State<LineChartSample2> {
-  List<Color> gradientColors = [
-    const Color(0xff23b6e6),
-    const Color(0xff02d39a),
-  ];
+  List<EcuFpeActuatorTempPoint> points = [];
 
-  bool showAvg = false;
+  @override
+  void initState() {
+    var rnd = Random();
+    for (var i = -50; i <= 200; i += 5) {
+      points.add(EcuFpeActuatorTempPoint(i, Duration(days: 0)));
+    }
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        AspectRatio(
-          aspectRatio: 1.70,
-          child: Container(
-            decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(18),
-                ),
-                color: Color(0xff232d37)),
-            child: Padding(
-              padding: const EdgeInsets.only(right: 18.0, left: 12.0, top: 24, bottom: 12),
-              child: LineChart(
-                showAvg ? avgData() : mainData(),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(
-          width: 60,
-          height: 34,
-          child: FlatButton(
-            onPressed: () {
-              setState(() {
-                showAvg = !showAvg;
-              });
-            },
-            child: Text(
-              'avg',
-              style: TextStyle(
-                  fontSize: 12, color: showAvg ? Colors.white.withOpacity(0.5) : Colors.white),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  LineChartData mainData() {
-    return LineChartData(
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-        getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        bottomTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 22,
-          getTextStyles: (value) =>
-              const TextStyle(color: Color(0xff68737d), fontWeight: FontWeight.bold, fontSize: 16),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 2:
-                return 'MAR';
-              case 5:
-                return 'JUN';
-              case 8:
-                return 'SEP';
-            }
-            return '';
-          },
-          margin: 8,
-        ),
-        leftTitles: SideTitles(
-          showTitles: true,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff67727d),
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 1:
-                return '10k';
-              case 3:
-                return '30k';
-              case 5:
-                return '50k';
-            }
-            return '';
-          },
-          reservedSize: 28,
-          margin: 12,
-        ),
-      ),
-      borderData:
-          FlBorderData(show: true, border: Border.all(color: const Color(0xff37434d), width: 1)),
-      minX: 0,
-      maxX: 11,
-      minY: 0,
-      maxY: 6,
-      lineBarsData: [
-        LineChartBarData(
-          spots: [
-            FlSpot(0, 3),
-            FlSpot(2.6, 2),
-            FlSpot(4.9, 5),
-            FlSpot(6.8, 3.1),
-            FlSpot(8, 4),
-            FlSpot(9.5, 3),
-            FlSpot(11, 4),
-          ],
-          isCurved: true,
-          colors: gradientColors,
-          barWidth: 5,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            colors: gradientColors.map((color) => color.withOpacity(0.3)).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  LineChartData avgData() {
-    return LineChartData(
-      lineTouchData: LineTouchData(enabled: false),
-      gridData: FlGridData(
-        show: true,
-        drawHorizontalLine: true,
-        getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: const Color(0xff37434d),
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        show: true,
-        bottomTitles: SideTitles(
-          showTitles: true,
-          reservedSize: 22,
-          getTextStyles: (value) =>
-              const TextStyle(color: Color(0xff68737d), fontWeight: FontWeight.bold, fontSize: 16),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 2:
-                return 'MAR';
-              case 5:
-                return 'JUN';
-              case 8:
-                return 'SEP';
-            }
-            return '';
-          },
-          margin: 8,
-        ),
-        leftTitles: SideTitles(
-          showTitles: true,
-          getTextStyles: (value) => const TextStyle(
-            color: Color(0xff67727d),
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-          getTitles: (value) {
-            switch (value.toInt()) {
-              case 1:
-                return '10k';
-              case 3:
-                return '30k';
-              case 5:
-                return '50k';
-            }
-            return '';
-          },
-          reservedSize: 28,
-          margin: 12,
-        ),
-      ),
-      borderData:
-          FlBorderData(show: true, border: Border.all(color: const Color(0xff37434d), width: 1)),
-      minX: 0,
-      maxX: 11,
-      minY: 0,
-      maxY: 6,
-      lineBarsData: [
-        LineChartBarData(
-          spots: [
-            FlSpot(0, 3.44),
-            FlSpot(2.6, 3.44),
-            FlSpot(4.9, 3.44),
-            FlSpot(6.8, 3.44),
-            FlSpot(8, 3.44),
-            FlSpot(9.5, 3.44),
-            FlSpot(11, 3.44),
-          ],
-          isCurved: true,
-          colors: [
-            ColorTween(begin: gradientColors[0], end: gradientColors[1]).lerp(0.2),
-            ColorTween(begin: gradientColors[0], end: gradientColors[1]).lerp(0.2),
-          ],
-          barWidth: 5,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: false,
-          ),
-          belowBarData: BarAreaData(show: true, colors: [
-            ColorTween(begin: gradientColors[0], end: gradientColors[1]).lerp(0.2).withOpacity(0.1),
-            ColorTween(begin: gradientColors[0], end: gradientColors[1]).lerp(0.2).withOpacity(0.1),
-          ]),
-        ),
-      ],
-    );
+    return ActTempHistoryChart(data: points);
   }
 }

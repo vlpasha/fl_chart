@@ -21,9 +21,13 @@ class MyApp extends StatelessWidget {
       title: 'FlChart Demo',
       showPerformanceOverlay: false,
       theme: ThemeData(
-        primaryColor: const Color(0xff262545),
-        primaryColorDark: const Color(0xff201f39),
-        brightness: Brightness.dark,
+        primaryColor: const Color(0xFF1C306D),
+        accentColor: const Color(0xFFFFAD32),
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFF1C306D),
+          foregroundColor: Colors.white,
+        ),
       ),
       home: const MyHomePage(title: 'fl_chart'),
     );
@@ -46,14 +50,6 @@ class _MyHomePageState extends State<MyHomePage> {
   final _curve = Curves.easeInOutCubic;
   final _pages = [
     LineChartPage(),
-    BarChartPage(),
-    BarChartPage2(),
-    PieChartPage(),
-    LineChartPage2(),
-    LineChartPage3(),
-    LineChartPage4(),
-    ScatterChartPage(),
-    RadarChartPage(),
   ];
 
   @override
