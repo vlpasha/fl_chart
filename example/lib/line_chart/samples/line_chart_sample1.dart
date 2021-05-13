@@ -29,21 +29,17 @@ class ScopeChannel extends ScopeChannelModel {
 }
 
 class RealTimeScope extends StatefulWidget {
-  final int maxSpots;
+  final int timeWindow;
   final List<ScopeChannelModel> channelsData;
   final Stream<ScopeChannelsValue> dataStream;
   final int _channelsCount;
-  final double minX;
-  final double maxX;
   final double minY;
   final double maxY;
   RealTimeScope({
     Key key,
     @required List<ScopeChannelModel> channels,
-    @required this.maxSpots,
+    @required this.timeWindow,
     @required this.dataStream,
-    this.minX,
-    this.maxX,
     this.minY,
     this.maxY,
   })  : _channelsCount = channels.length,
@@ -58,6 +54,10 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
   AnimationController _animationController;
   StreamSubscription<ScopeChannelsValue> _subscr;
   List<ScopeChannel> _channels;
+  Widget _scope;
+  bool _timestampCompensated = false;
+  int _timestampDelta = 0;
+  int _startTime;
   final _axesData = ScopeAxesData(
     vertical: ScopeAxis(
       showAxis: true,
@@ -80,7 +80,8 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
           var seconds = ((value ~/ 1000) % 60),
               minutes = ((value ~/ (1000 * 60)) % 60),
               hours = ((value ~/ (1000 * 60 * 60)) % 24);
-          return '${hours.toString().padLeft(2, '0')}:'
+          return '${value < 0 ? "-" : ""}'
+              '${hours.toString().padLeft(2, '0')}:'
               '${minutes.toString().padLeft(2, '0')}:'
               '${seconds.toString().padLeft(2, '0')}';
         },
@@ -102,26 +103,33 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
         )
         .toList();
 
-    _subscr = widget.dataStream.listen((event) => _subscr.pause(_buildData(event)));
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 1),
     )..repeat();
+    _startTime = DateTime.now().millisecondsSinceEpoch;
+    _subscr = widget.dataStream.listen((event) => _subscr.pause(_buildData(event)));
   }
 
   Future<void> _buildData(ScopeChannelsValue event) {
     if (event.values.length != widget._channelsCount) {
       throw Exception('Values sount must match channles count');
     }
+    if (_timestampCompensated != true) {
+      _timestampDelta = DateTime.now().millisecondsSinceEpoch - event.timestamp;
+      _timestampCompensated = true;
+    }
     for (var i = 0; i < widget._channelsCount; i++) {
-      if (_channels[i].spots.length == widget.maxSpots) {
+      if (_channels[i].spots.isNotEmpty &&
+          _channels[i].spots.last.x - _channels[i].spots.first.x > widget.timeWindow) {
         _channels[i].spots.removeAt(0);
       }
       _channels[i].spots.add(FlSpot(
-            event.timestamp.toDouble(),
+            (event.timestamp + _timestampDelta - _startTime).toDouble(),
             event.values[i],
           ));
     }
+    _scope = null;
     return Future<void>.value();
   }
 
@@ -130,18 +138,17 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
     return AnimatedBuilder(
       animation: _animationController,
       builder: (_, __) {
-        return Padding(
+        final now = DateTime.now().millisecondsSinceEpoch - _startTime;
+        _scope ??= Padding(
           padding: const EdgeInsets.all(8),
           child: ScopeChart(
             data: ScopeChartData(
               axesData: _axesData,
-              clipData: FlClipData.none(),
+              clipData: FlClipData.all(),
               minY: widget.minY,
               maxY: widget.maxY,
-              minX: _channels[0].spots.isNotEmpty ? _channels[0].spots.first.x : widget.minX ?? 0,
-              maxX: _channels[0].spots.isNotEmpty && _channels[0].spots.last.x > widget.maxX ?? 0
-                  ? _channels[0].spots.last.x
-                  : widget.maxX ?? 0,
+              minX: (now - widget.timeWindow).toDouble(),
+              maxX: now.toDouble(),
               lineBarsData: _channels[0].spots.isNotEmpty
                   ? _channels
                       .map(
@@ -157,6 +164,7 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
             ),
           ),
         );
+        return _scope;
       },
     );
   }
@@ -169,7 +177,7 @@ class LineChartSample1 extends StatefulWidget {
 
 class _LineChartSample1State extends State<LineChartSample1> {
   var rnd = Random();
-  int timeStep = 60;
+  int timeStep = 30;
   int spotsCount = 200;
   double radians = 0.0;
 
@@ -178,8 +186,6 @@ class _LineChartSample1State extends State<LineChartSample1> {
 
   @override
   void initState() {
-    var _startTime = 0;
-    // DateTime.now().millisecondsSinceEpoch;
     Timer.periodic(Duration(milliseconds: timeStep), (timer) {
       _stream.add(ScopeChannelsValue(
         values: [
@@ -187,9 +193,8 @@ class _LineChartSample1State extends State<LineChartSample1> {
           cos((radians * pi)) * 500,
           atan((radians * pi)) * 100,
         ],
-        timestamp: _startTime,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
       ));
-      _startTime += timeStep;
       radians += 0.05;
       if (radians >= 2.0) {
         radians = 0.0;
@@ -201,10 +206,8 @@ class _LineChartSample1State extends State<LineChartSample1> {
   @override
   Widget build(BuildContext context) {
     return RealTimeScope(
-      maxSpots: spotsCount,
+      timeWindow: Duration(seconds: 10).inMilliseconds,
       dataStream: _stream.stream,
-      minX: 0,
-      maxX: (timeStep * spotsCount).toDouble(),
       maxY: 1100,
       minY: -1100,
       channels: [
