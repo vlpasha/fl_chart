@@ -132,7 +132,7 @@ class _LineChartSample2State extends State<LineChartSample2> {
   void initState() {
     var rnd = Random();
     for (var i = -50; i <= 200; i += 5) {
-      points.add(EcuFpeActuatorTempPoint(i, Duration(days: 0)));
+      points.add(EcuFpeActuatorTempPoint(i, Duration(days: rnd.nextInt(1000))));
     }
     super.initState();
   }

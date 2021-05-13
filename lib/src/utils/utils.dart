@@ -105,6 +105,7 @@ Color lerpGradient(List<Color> colors, List<double> stops, double t) {
 double getEfficientInterval(double axisViewSize, double diffInYAxis,
     {double pixelPerInterval = 30}) {
   final allowedCount = axisViewSize ~/ pixelPerInterval;
+  if (allowedCount == 0) return 0;
   final accurateInterval = diffInYAxis / allowedCount;
   return _roundInterval(accurateInterval).toDouble();
 }

@@ -7,37 +7,169 @@ import 'package:flutter/material.dart' hide Image;
 
 import 'scope_chart_helper.dart';
 
-/// [ScopeChart] needs this class to render itself.
-///
-/// It holds data needed to draw a line chart,
-/// including bar lines, spots, colors, touches, ...
-class ScopeChartData extends AxisChartData with EquatableMixin {
-  /// [ScopeChart] draws some lines in various shapes and overlaps them.
+class ScopeBorderData with EquatableMixin {
+  final bool showBorder;
+  Border border;
+
+  ScopeBorderData({
+    this.showBorder = true,
+    Border? border,
+  }) : border = border ??
+            Border.all(
+              color: Colors.black,
+              width: 1.0,
+              style: BorderStyle.solid,
+            );
+
+  @override
+  List<Object?> get props => [
+        showBorder,
+        border,
+      ];
+}
+
+class ScopeAxisTitle with EquatableMixin {
+  final bool showTitle;
+  final String titleText;
+  final double reservedSize;
+  final TextStyle textStyle;
+  final TextAlign textAlign;
+  final TextDirection textDirection;
+  final double margin;
+  ScopeAxisTitle({
+    this.showTitle = false,
+    String? titleText,
+    double? reservedSize,
+    TextStyle? textStyle,
+    TextDirection? textDirection,
+    TextAlign? textAlign,
+    double? margin,
+  })  : titleText = titleText ?? '',
+        reservedSize = reservedSize ?? 14,
+        textStyle = textStyle ??
+            const TextStyle(
+              color: Colors.black,
+              fontSize: 11,
+            ),
+        textDirection = textDirection ?? TextDirection.ltr,
+        textAlign = textAlign ?? TextAlign.center,
+        margin = margin ?? 4;
+
+  /// Used for equality check, see [EquatableMixin].
+  @override
+  List<Object?> get props => [
+        showTitle,
+        titleText,
+        reservedSize,
+        textStyle,
+        textAlign,
+        margin,
+      ];
+}
+
+class ScopeTitles with EquatableMixin {
+  final bool showTitles;
+  final GetTitleFunction getTitles;
+  final double reservedSize;
+  final GetTitleTextStyleFunction getTextStyles;
+  final TextDirection textDirection;
+  final double margin;
+  final double rotateAngle;
+
+  ScopeTitles({
+    this.showTitles = true,
+    GetTitleFunction? getTitles,
+    double? reservedSize,
+    GetTitleTextStyleFunction? getTextStyles,
+    TextDirection? textDirection,
+    double? margin,
+    double? rotateAngle,
+  })  : getTitles = getTitles ?? defaultGetTitle,
+        reservedSize = reservedSize ?? 22,
+        getTextStyles = getTextStyles ?? defaultGetTitleTextStyle,
+        textDirection = textDirection ?? TextDirection.ltr,
+        margin = margin ?? 6,
+        rotateAngle = rotateAngle ?? 0.0;
+
+  /// Used for equality check, see [EquatableMixin].
+  @override
+  List<Object?> get props => [
+        showTitles,
+        getTitles,
+        reservedSize,
+        getTextStyles,
+        margin,
+        rotateAngle,
+      ];
+}
+
+class ScopeGrid with EquatableMixin {
+  final bool showGrid;
+  final GetDrawingGridLine getDrawingLine;
+  final CheckToShowGrid checkToShowLine;
+
+  ScopeGrid({
+    bool? showGrid,
+    GetDrawingGridLine? getDrawingLine,
+    CheckToShowGrid? checkToShowLine,
+  })  : showGrid = showGrid ?? true,
+        getDrawingLine = getDrawingLine ?? defaultGridLine,
+        checkToShowLine = checkToShowLine ?? showAllGrids;
+
+  @override
+  List<Object?> get props => [
+        showGrid,
+        getDrawingLine,
+        checkToShowLine,
+      ];
+}
+
+class ScopeAxis {
+  final bool showAxis;
+  double? interval;
+  final ScopeAxisTitle title;
+  final ScopeTitles titles;
+  final ScopeGrid grid;
+  ScopeAxis({
+    this.showAxis = true,
+    ScopeTitles? titles,
+    ScopeGrid? grid,
+    ScopeAxisTitle? title,
+    double? interval,
+  })  : titles = titles ?? ScopeTitles(reservedSize: 16),
+        grid = grid ?? ScopeGrid(),
+        title = title ?? ScopeAxisTitle(),
+        interval = interval;
+}
+
+class ScopeAxesData {
+  final ScopeAxis vertical;
+  final ScopeAxis horizontal;
+  ScopeAxesData({
+    ScopeAxis? vertical,
+    ScopeAxis? horizontal,
+  })  : vertical = vertical ?? ScopeAxis(),
+        horizontal = horizontal ?? ScopeAxis();
+}
+
+class ScopeChartData with EquatableMixin {
   final List<ScopeChartBarData> lineBarsData;
+  final ScopeAxesData axesData;
+  final ScopeBorderData borderData;
+  final FlClipData clipData;
+  final Color backgroundColor;
+  final double minX;
+  final double maxX;
+  final double minY;
+  final double maxY;
 
-  /// Titles on left, top, right, bottom axis for each number.
-  final FlTitlesData titlesData;
+  double get verticalDiff => maxY - minY;
+  double get horizontalDiff => maxX - minX;
 
-  /// [ScopeChart] draws some lines in various shapes and overlaps them.
-  /// lines are defined in [lineBarsData]
-  ///
-  /// It draws some titles on left, top, right, bottom sides per each axis number,
-  /// you can modify [titlesData] to have your custom titles,
-  /// also you can define the axis title (one text per axis) for each side
-  /// using [axisTitleData], you can restrict the y axis using [minY] and [maxY] value,
-  /// and restrict x axis using [minX] and [maxX].
-  ///
-  /// It draws a color as a background behind everything you can set it using [backgroundColor],
-  /// then a grid over it, you can customize it using [gridData],
-  /// and it draws 4 borders around your chart, you can customize it using [borderData].
-  ///
-  /// [clipData] forces the [LineChart] to draw lines inside the chart bounding box.
   ScopeChartData({
     List<ScopeChartBarData>? lineBarsData,
-    FlTitlesData? titlesData,
-    FlGridData? gridData,
-    FlBorderData? borderData,
-    FlAxisTitleData? axisTitleData,
+    ScopeAxesData? axesData,
+    ScopeBorderData? borderData,
     double? minX,
     double? maxX,
     double? minY,
@@ -45,50 +177,19 @@ class ScopeChartData extends AxisChartData with EquatableMixin {
     FlClipData? clipData,
     Color? backgroundColor,
   })  : lineBarsData = lineBarsData ?? const [],
-        titlesData = titlesData ?? FlTitlesData(),
-        super(
-          gridData: gridData ?? FlGridData(),
-          touchData: FlTouchData(false),
-          borderData: borderData,
-          axisTitleData: axisTitleData ?? FlAxisTitleData(),
-          rangeAnnotations: RangeAnnotations(),
-          clipData: clipData ?? FlClipData.none(),
-          backgroundColor: backgroundColor,
-          minX: minX ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).minX,
-          maxX: maxX ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).maxX,
-          minY: minY ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).minY,
-          maxY: maxY ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).maxY,
-        );
+        axesData = axesData ?? ScopeAxesData(),
+        borderData = borderData ?? ScopeBorderData(),
+        backgroundColor = backgroundColor ?? Colors.transparent,
+        clipData = clipData ?? FlClipData.none(),
+        minX = minX ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).minX,
+        maxX = maxX ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).maxX,
+        minY = minY ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).minY,
+        maxY = maxY ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).maxY;
 
-  /// Lerps a [BaseChartData] based on [t] value, check [Tween.lerp].
-  @override
-  ScopeChartData lerp(BaseChartData a, BaseChartData b, double t) {
-    if (a is ScopeChartData && b is ScopeChartData) {
-      return ScopeChartData(
-        minX: lerpDouble(a.minX, b.minX, t),
-        maxX: lerpDouble(a.maxX, b.maxX, t),
-        minY: lerpDouble(a.minY, b.minY, t),
-        maxY: lerpDouble(a.maxY, b.maxY, t),
-        backgroundColor: Color.lerp(a.backgroundColor, b.backgroundColor, t),
-        borderData: FlBorderData.lerp(a.borderData, b.borderData, t),
-        clipData: b.clipData,
-        gridData: FlGridData.lerp(a.gridData, b.gridData, t),
-        titlesData: FlTitlesData.lerp(a.titlesData, b.titlesData, t),
-        axisTitleData: FlAxisTitleData.lerp(a.axisTitleData, b.axisTitleData, t),
-      );
-    } else {
-      throw Exception('Illegal State');
-    }
-  }
-
-  /// Copies current [LineChartData] to a new [LineChartData],
-  /// and replaces provided values.
   ScopeChartData copyWith({
     List<ScopeChartBarData>? lineBarsData,
-    FlTitlesData? titlesData,
-    FlAxisTitleData? axisTitleData,
-    FlGridData? gridData,
-    FlBorderData? borderData,
+    ScopeAxesData? axesData,
+    ScopeBorderData? borderData,
     double? minX,
     double? maxX,
     double? minY,
@@ -98,15 +199,12 @@ class ScopeChartData extends AxisChartData with EquatableMixin {
   }) {
     return ScopeChartData(
       lineBarsData: lineBarsData ?? this.lineBarsData,
-      titlesData: titlesData ?? this.titlesData,
-      axisTitleData: axisTitleData ?? this.axisTitleData,
-      gridData: gridData ?? this.gridData,
+      axesData: axesData ?? this.axesData,
       borderData: borderData ?? this.borderData,
       minX: minX ?? this.minX,
       maxX: maxX ?? this.maxX,
       minY: minY ?? this.minY,
       maxY: maxY ?? this.maxY,
-      clipData: clipData ?? this.clipData,
       backgroundColor: backgroundColor ?? this.backgroundColor,
     );
   }
@@ -115,16 +213,12 @@ class ScopeChartData extends AxisChartData with EquatableMixin {
   @override
   List<Object?> get props => [
         lineBarsData,
-        titlesData,
-        gridData,
+        axesData,
         borderData,
-        axisTitleData,
-        rangeAnnotations,
         minX,
         maxX,
         minY,
         maxY,
-        clipData,
         backgroundColor,
       ];
 }
