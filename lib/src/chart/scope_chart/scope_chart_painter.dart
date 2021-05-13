@@ -32,10 +32,6 @@ class ScopeChartPainter {
 
   void paint(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
     final data = holder.data;
-    if (data.lineBarsData.isEmpty) {
-      return;
-    }
-
     if (data.clipData.any) {
       canvasWrapper.saveLayer(
         Rect.fromLTWH(0, -40, canvasWrapper.size.width + 40, canvasWrapper.size.height + 40),

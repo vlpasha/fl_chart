@@ -40,7 +40,7 @@ class RenderScopeChart extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(CustomPainter oldDelegate) => oldDelegate != this;
 
   @override
   void paint(Canvas canvas, Size size) {

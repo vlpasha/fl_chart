@@ -54,7 +54,6 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
   AnimationController _animationController;
   StreamSubscription<ScopeChannelsValue> _subscr;
   List<ScopeChannel> _channels;
-  Widget _scope;
   bool _timestampCompensated = false;
   int _timestampDelta = 0;
   int _startTime;
@@ -129,7 +128,6 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
             event.values[i],
           ));
     }
-    _scope = null;
     return Future<void>.value();
   }
 
@@ -139,7 +137,7 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
       animation: _animationController,
       builder: (_, __) {
         final now = DateTime.now().millisecondsSinceEpoch - _startTime;
-        _scope ??= Padding(
+        return Padding(
           padding: const EdgeInsets.all(8),
           child: ScopeChart(
             data: ScopeChartData(
@@ -164,7 +162,6 @@ class _RealTimeScopeState extends State<RealTimeScope> with SingleTickerProvider
             ),
           ),
         );
-        return _scope;
       },
     );
   }
@@ -177,8 +174,7 @@ class LineChartSample1 extends StatefulWidget {
 
 class _LineChartSample1State extends State<LineChartSample1> {
   var rnd = Random();
-  int timeStep = 30;
-  int spotsCount = 200;
+  int timeStep = 100;
   double radians = 0.0;
 
   int startTime = 0;
