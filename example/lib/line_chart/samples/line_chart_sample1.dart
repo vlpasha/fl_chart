@@ -161,12 +161,22 @@ import 'package:flutter/material.dart';
 //   }
 // }
 
-class LineChartSample1 extends StatefulWidget {
+class LineChartSample1 extends StatelessWidget {
   @override
-  _LineChartSample1State createState() => _LineChartSample1State();
+  Widget build(context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [Expanded(child: ScopeChartSample()), Expanded(child: LineChartSample())],
+      );
 }
 
-class _LineChartSample1State extends State<LineChartSample1> {
+class ScopeChartSample extends StatefulWidget {
+  @override
+  _ScopeChartSampleState createState() => _ScopeChartSampleState();
+}
+
+class _ScopeChartSampleState extends State<ScopeChartSample> {
   var rnd = Random();
   int timeStep = 100;
   double radians = 0.0;
@@ -177,8 +187,8 @@ class _LineChartSample1State extends State<LineChartSample1> {
     StreamController(),
     StreamController(),
   ];
-
   List<ScopeChartChannel> _channels;
+  Timer _timer;
 
   @override
   void initState() {
@@ -200,7 +210,7 @@ class _LineChartSample1State extends State<LineChartSample1> {
       ),
     ];
 
-    Timer.periodic(Duration(milliseconds: timeStep), (timer) {
+    _timer = Timer.periodic(Duration(milliseconds: timeStep), (timer) {
       final _timestamp = DateTime.now().millisecondsSinceEpoch;
       _streams[0].add(ScopeChartChannelValue(
         value: sin((radians * pi)) * 1000,
@@ -223,6 +233,12 @@ class _LineChartSample1State extends State<LineChartSample1> {
   }
 
   @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ScopeChart(
       timeWindow: Duration(seconds: 10).inMilliseconds,
@@ -231,4 +247,75 @@ class _LineChartSample1State extends State<LineChartSample1> {
       maxY: 1000,
     );
   }
+}
+
+class LineChartSample extends StatefulWidget {
+  LineChartSample({Key key}) : super(key: key);
+  @override
+  State<StatefulWidget> createState() => _LineChartSampleState();
+}
+
+class _LineChartSampleState extends State<LineChartSample> {
+  List<FlSpot> _cos(int cunt, double phase) {
+    var radians = 0.0;
+    var values = <FlSpot>[];
+    for (var i = 0; i < cunt; i++) {
+      values.add(FlSpot(i.toDouble(), cos(radians * pi + phase)));
+      radians += 0.05;
+      if (radians > 2.0) radians = 0;
+    }
+    return values;
+  }
+
+  List<FlSpot> _sin(int cunt, double phase) {
+    var radians = 0.0;
+    var values = <FlSpot>[];
+    for (var i = 0; i < cunt; i++) {
+      values.add(FlSpot(i.toDouble(), sin(radians * pi + phase)));
+      radians += 0.05;
+      if (radians > 2.0) radians = 0;
+    }
+    return values;
+  }
+
+  @override
+  Widget build(context) => LineChart(LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: true,
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: SideTitles(
+            showTitles: true,
+            getTitles: (value) => value.toStringAsFixed(0),
+          ),
+          leftTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 50,
+            getTitles: (value) => value.toStringAsFixed(0),
+          ),
+        ),
+        lineTouchData: LineTouchData(enabled: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: [..._cos(100, 0), FlSpot.nullSpot, ..._cos(100, 1)],
+            isCurved: false,
+            isStepLineChart: false,
+            colors: [Colors.red],
+            barWidth: 2,
+            isStrokeCapRound: false,
+            dotData: FlDotData(show: false),
+          ),
+          LineChartBarData(
+            spots: [..._sin(100, 0)],
+            isCurved: false,
+            isStepLineChart: false,
+            colors: [Colors.green],
+            barWidth: 2,
+            isStrokeCapRound: false,
+            dotData: FlDotData(show: false),
+          ),
+        ],
+      ));
 }
