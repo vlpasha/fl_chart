@@ -41,8 +41,8 @@ class ScopeChartPainter {
       _clipToBorder(canvasWrapper, holder);
     }
 
-    for (var i = 0; i < data.lineBarsData.length; i++) {
-      final barData = data.lineBarsData[i];
+    for (var i = 0; i < data.channelsData.length; i++) {
+      final barData = data.channelsData[i];
       if (!barData.show) continue;
       _drawBarLine(canvasWrapper, barData, holder);
     }
@@ -336,7 +336,7 @@ class ScopeChartPainter {
 
   void _drawBarLine(
     CanvasWrapper canvasWrapper,
-    ScopeChartBarData barData,
+    ScopeChannelData barData,
     ScopePaintHolder holder,
   ) {
     final viewSize = canvasWrapper.size;
@@ -362,7 +362,7 @@ class ScopeChartPainter {
 
   Path _generateBarPath(
     Size viewSize,
-    ScopeChartBarData barData,
+    ScopeChannelData barData,
     List<FlSpot> barSpots,
     ScopePaintHolder holder, {
     Path? appendToPath,
@@ -378,7 +378,7 @@ class ScopeChartPainter {
 
   Path _generateNormalBarPath(
     Size viewSize,
-    ScopeChartBarData barData,
+    ScopeChannelData barData,
     List<FlSpot> barSpots,
     ScopePaintHolder holder, {
     Path? appendToPath,
@@ -454,7 +454,7 @@ class ScopeChartPainter {
   void _drawBarShadow(
     CanvasWrapper canvasWrapper,
     Path barPath,
-    ScopeChartBarData barData,
+    ScopeChannelData barData,
   ) {
     if (!barData.show || barData.shadow.color.opacity == 0.0) {
       return;
@@ -462,7 +462,7 @@ class ScopeChartPainter {
     _barPaint.strokeCap = StrokeCap.butt;
     _barPaint.color = barData.shadow.color;
     _barPaint.shader = null;
-    _barPaint.strokeWidth = barData.barWidth;
+    _barPaint.strokeWidth = barData.width;
     _barPaint.color = barData.shadow.color;
     _barPaint.maskFilter =
         MaskFilter.blur(BlurStyle.normal, convertRadiusToSigma(barData.shadow.blurRadius));
@@ -481,7 +481,7 @@ class ScopeChartPainter {
   void _drawBar(
     CanvasWrapper canvasWrapper,
     Path barPath,
-    ScopeChartBarData barData,
+    ScopeChannelData barData,
     ScopePaintHolder holder,
   ) {
     if (!barData.show) {
@@ -491,7 +491,7 @@ class ScopeChartPainter {
     _barPaint.color = barData.color;
     _barPaint.shader = null;
     _barPaint.maskFilter = null;
-    _barPaint.strokeWidth = barData.barWidth;
+    _barPaint.strokeWidth = barData.width;
     _barPaint.transparentIfWidthIsZero();
     canvasWrapper.drawPath(barPath, _barPaint);
   }
@@ -591,7 +591,7 @@ class ScopeChartPainter {
   bool _checkToShowTitle(
     double minValue,
     double maxValue,
-    ScopeTitles titles,
+    ScopeAxisTitles titles,
     double appliedInterval,
     double value,
   ) {

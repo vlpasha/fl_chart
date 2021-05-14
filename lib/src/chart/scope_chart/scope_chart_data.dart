@@ -26,6 +26,12 @@ class ScopeBorderData with EquatableMixin {
         showBorder,
         border,
       ];
+
+  ScopeBorderData copyWith(
+    bool? showBorder,
+    Border? border,
+  ) =>
+      ScopeBorderData(showBorder: showBorder ?? this.showBorder, border: border ?? this.border);
 }
 
 class ScopeAxisTitle with EquatableMixin {
@@ -36,6 +42,7 @@ class ScopeAxisTitle with EquatableMixin {
   final TextAlign textAlign;
   final TextDirection textDirection;
   final double margin;
+
   ScopeAxisTitle({
     this.showTitle = false,
     String? titleText,
@@ -55,6 +62,25 @@ class ScopeAxisTitle with EquatableMixin {
         textAlign = textAlign ?? TextAlign.center,
         margin = margin ?? 4;
 
+  ScopeAxisTitle copyWith({
+    bool? showTitle,
+    String? titleText,
+    double? reservedSize,
+    TextStyle? textStyle,
+    TextDirection? textDirection,
+    TextAlign? textAlign,
+    double? margin,
+  }) =>
+      ScopeAxisTitle(
+        showTitle: showTitle ?? this.showTitle,
+        titleText: titleText ?? this.titleText,
+        reservedSize: reservedSize ?? this.reservedSize,
+        textStyle: textStyle ?? this.textStyle,
+        textDirection: textDirection ?? this.textDirection,
+        textAlign: textAlign ?? this.textAlign,
+        margin: margin ?? this.margin,
+      );
+
   /// Used for equality check, see [EquatableMixin].
   @override
   List<Object?> get props => [
@@ -67,7 +93,7 @@ class ScopeAxisTitle with EquatableMixin {
       ];
 }
 
-class ScopeTitles with EquatableMixin {
+class ScopeAxisTitles with EquatableMixin {
   final bool showTitles;
   final GetTitleFunction getTitles;
   final double reservedSize;
@@ -76,7 +102,7 @@ class ScopeTitles with EquatableMixin {
   final double margin;
   final double rotateAngle;
 
-  ScopeTitles({
+  ScopeAxisTitles({
     this.showTitles = true,
     GetTitleFunction? getTitles,
     double? reservedSize,
@@ -90,6 +116,25 @@ class ScopeTitles with EquatableMixin {
         textDirection = textDirection ?? TextDirection.ltr,
         margin = margin ?? 6,
         rotateAngle = rotateAngle ?? 0.0;
+
+  ScopeAxisTitles copyWith({
+    bool? showTitles,
+    GetTitleFunction? getTitles,
+    double? reservedSize,
+    GetTitleTextStyleFunction? getTextStyles,
+    TextDirection? textDirection,
+    double? margin,
+    double? rotateAngle,
+  }) =>
+      ScopeAxisTitles(
+        showTitles: showTitles ?? this.showTitles,
+        getTitles: getTitles ?? this.getTitles,
+        reservedSize: reservedSize ?? this.reservedSize,
+        getTextStyles: getTextStyles ?? this.getTextStyles,
+        textDirection: textDirection ?? this.textDirection,
+        margin: margin ?? this.margin,
+        rotateAngle: rotateAngle ?? this.rotateAngle,
+      );
 
   /// Used for equality check, see [EquatableMixin].
   @override
@@ -116,6 +161,17 @@ class ScopeGrid with EquatableMixin {
         getDrawingLine = getDrawingLine ?? defaultGridLine,
         checkToShowLine = checkToShowLine ?? showAllGrids;
 
+  ScopeGrid copyWith({
+    bool? showGrid,
+    GetDrawingGridLine? getDrawingLine,
+    CheckToShowGrid? checkToShowLine,
+  }) =>
+      ScopeGrid(
+        showGrid: showGrid ?? this.showGrid,
+        getDrawingLine: getDrawingLine ?? this.getDrawingLine,
+        checkToShowLine: checkToShowLine ?? this.checkToShowLine,
+      );
+
   @override
   List<Object?> get props => [
         showGrid,
@@ -128,32 +184,86 @@ class ScopeAxis {
   final bool showAxis;
   double? interval;
   final ScopeAxisTitle title;
-  final ScopeTitles titles;
+  final ScopeAxisTitles titles;
   final ScopeGrid grid;
+
   ScopeAxis({
     this.showAxis = true,
-    ScopeTitles? titles,
+    ScopeAxisTitles? titles,
     ScopeGrid? grid,
     ScopeAxisTitle? title,
     double? interval,
-  })  : titles = titles ?? ScopeTitles(reservedSize: 16),
+  })  : titles = titles ?? ScopeAxisTitles(reservedSize: 16),
         grid = grid ?? ScopeGrid(),
         title = title ?? ScopeAxisTitle(),
         interval = interval;
+
+  ScopeAxis copyWith({
+    bool? showAxis,
+    ScopeAxisTitles? titles,
+    ScopeGrid? grid,
+    ScopeAxisTitle? title,
+    double? interval,
+  }) =>
+      ScopeAxis(
+          showAxis: showAxis ?? this.showAxis,
+          titles: this.titles.copyWith(
+                showTitles: titles?.showTitles,
+                getTextStyles: titles?.getTextStyles,
+                getTitles: titles?.getTitles,
+                margin: titles?.margin,
+                reservedSize: titles?.reservedSize,
+                rotateAngle: titles?.rotateAngle,
+                textDirection: titles?.textDirection,
+              ),
+          grid: this.grid.copyWith(
+                showGrid: grid?.showGrid,
+                checkToShowLine: grid?.checkToShowLine,
+                getDrawingLine: grid?.getDrawingLine,
+              ),
+          title: this.title.copyWith(
+              showTitle: title?.showTitle,
+              titleText: title?.titleText,
+              reservedSize: title?.reservedSize,
+              textStyle: title?.textStyle,
+              textDirection: title?.textDirection,
+              textAlign: title?.textAlign,
+              margin: title?.margin),
+          interval: interval ?? this.interval);
 }
 
 class ScopeAxesData {
   final ScopeAxis vertical;
   final ScopeAxis horizontal;
+
   ScopeAxesData({
     ScopeAxis? vertical,
     ScopeAxis? horizontal,
   })  : vertical = vertical ?? ScopeAxis(),
         horizontal = horizontal ?? ScopeAxis();
+
+  ScopeAxesData copyWith({
+    ScopeAxis? vertical,
+    ScopeAxis? horizontal,
+  }) =>
+      ScopeAxesData(
+        horizontal: this.horizontal.copyWith(
+            showAxis: horizontal?.showAxis,
+            interval: horizontal?.interval,
+            grid: horizontal?.grid,
+            title: horizontal?.title,
+            titles: horizontal?.titles),
+        vertical: this.vertical.copyWith(
+            showAxis: vertical?.showAxis,
+            interval: vertical?.interval,
+            grid: vertical?.grid,
+            title: vertical?.title,
+            titles: vertical?.titles),
+      );
 }
 
 class ScopeChartData with EquatableMixin {
-  final List<ScopeChartBarData> lineBarsData;
+  final List<ScopeChannelData> channelsData;
   final ScopeAxesData axesData;
   final ScopeBorderData borderData;
   final FlClipData clipData;
@@ -167,7 +277,7 @@ class ScopeChartData with EquatableMixin {
   double get horizontalDiff => maxX - minX;
 
   ScopeChartData({
-    List<ScopeChartBarData>? lineBarsData,
+    List<ScopeChannelData>? channelsData,
     ScopeAxesData? axesData,
     ScopeBorderData? borderData,
     double? minX,
@@ -176,18 +286,18 @@ class ScopeChartData with EquatableMixin {
     double? maxY,
     FlClipData? clipData,
     Color? backgroundColor,
-  })  : lineBarsData = lineBarsData ?? const [],
+  })  : channelsData = channelsData ?? const [],
         axesData = axesData ?? ScopeAxesData(),
         borderData = borderData ?? ScopeBorderData(),
         backgroundColor = backgroundColor ?? Colors.transparent,
         clipData = clipData ?? FlClipData.none(),
-        minX = minX ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).minX,
-        maxX = maxX ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).maxX,
-        minY = minY ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).minY,
-        maxY = maxY ?? ScopeChartHelper.calculateMaxAxisValues(lineBarsData ?? const []).maxY;
+        minX = minX ?? ScopeChartHelper.calculateMaxAxisValues(channelsData ?? const []).minX,
+        maxX = maxX ?? ScopeChartHelper.calculateMaxAxisValues(channelsData ?? const []).maxX,
+        minY = minY ?? ScopeChartHelper.calculateMaxAxisValues(channelsData ?? const []).minY,
+        maxY = maxY ?? ScopeChartHelper.calculateMaxAxisValues(channelsData ?? const []).maxY;
 
   ScopeChartData copyWith({
-    List<ScopeChartBarData>? lineBarsData,
+    List<ScopeChannelData>? channelsData,
     ScopeAxesData? axesData,
     ScopeBorderData? borderData,
     double? minX,
@@ -198,7 +308,7 @@ class ScopeChartData with EquatableMixin {
     Color? backgroundColor,
   }) {
     return ScopeChartData(
-      lineBarsData: lineBarsData ?? this.lineBarsData,
+      channelsData: channelsData ?? this.channelsData,
       axesData: axesData ?? this.axesData,
       borderData: borderData ?? this.borderData,
       minX: minX ?? this.minX,
@@ -212,7 +322,7 @@ class ScopeChartData with EquatableMixin {
   /// Used for equality check, see [EquatableMixin].
   @override
   List<Object?> get props => [
-        lineBarsData,
+        channelsData,
         axesData,
         borderData,
         minX,
@@ -224,80 +334,17 @@ class ScopeChartData with EquatableMixin {
 }
 
 /// Holds data for drawing each individual line in the [ScopeChart]
-class ScopeChartBarData with EquatableMixin {
-  /// This line goes through this spots.
-  ///
-  /// You can have multiple lines by splitting them,
-  /// put a [FlSpot.nullSpot] between each section.
+class ScopeChannelData with EquatableMixin {
   final List<FlSpot> spots;
-
-  /// Determines to show or hide the line.
   final bool show;
-
-  /// determines the color of drawing line, if one color provided it applies a solid color,
-  /// otherwise it gradients between provided colors for drawing the line.
   final Color color;
-
-  /// Determines thickness of drawing line.
-  final double barWidth;
-
-  /// If it's true, [ScopeChart] draws the line with curved edges,
-  /// otherwise it draws line with hard edges.
+  final double width;
   final bool isCurved;
-
-  /// If [isCurved] is true, it determines smoothness of the curved edges.
   final double curveSmoothness;
-
-  /// Prevent overshooting when draw curve line with high value changes.
-  /// check this [issue](https://github.com/imaNNeoFighT/fl_chart/issues/25)
   final bool preventCurveOverShooting;
-
-  /// Applies threshold for [preventCurveOverShooting] algorithm.
   final double preventCurveOvershootingThreshold;
-
-  /// Drops a shadow behind the bar line.
   final Shadow shadow;
-
-  /// [BarChart] draws some lines and overlaps them in the chart's view,
-  /// You can have multiple lines by splitting them,
-  /// put a [FlSpot.nullSpot] between each section.
-  /// each line passes through [spots], with hard edges by default,
-  /// [isCurved] makes it curve for drawing, and [curveSmoothness] determines the curve smoothness.
-  ///
-  /// [show] determines the drawing, if set to false, it draws nothing.
-  ///
-  /// [colors] determines the color of drawing line, if one color provided it applies a solid color,
-  /// otherwise it gradients between provided colors for drawing the line.
-  /// Gradient happens using provided [colorStops], [gradientFrom], [gradientTo].
-  /// if you want it draw normally, don't touch them,
-  /// check [LinearGradient] for understanding [colorStops]
-  ///
-  /// [barWidth] determines the thickness of drawing line,
-  ///
-  /// if [isCurved] is true, in some situations if the spots changes are in high values,
-  /// an overshooting will happen, we don't have any idea to solve this at the moment,
-  /// but you can set [preventCurveOverShooting] true, and update the threshold
-  /// using [preventCurveOvershootingThreshold] to achieve an acceptable curve,
-  /// check this [issue](https://github.com/imaNNeoFighT/fl_chart/issues/25)
-  /// to overshooting understand the problem.
-  ///
-  /// [isStrokeCapRound] determines the shape of line's cap.
-  ///
-  /// [belowBarData], and  [aboveBarData] used to fill the space below or above the drawn line,
-  /// you can fill with a solid color or a linear gradient.
-  ///
-  /// [LineChart] draws points that the line is going through [spots],
-  /// you can customize it's appearance using [dotData].
-  ///
-  /// there are some indicators with a line and bold point on each spot,
-  /// you can show them by filling [showingIndicators] with indices
-  /// you want to show indicator on them.
-  ///
-  /// [LineChart] draws the lines with dashed effect if you fill [dashArray].
-  ///
-  /// If you want to have a Step Line Chart style, just set [isStepLineChart] true,
-  /// also you can tweak the [LineChartBarData.lineChartStepData].
-  ScopeChartBarData({
+  ScopeChannelData({
     List<FlSpot>? spots,
     bool? show,
     Color? color,
@@ -310,7 +357,7 @@ class ScopeChartBarData with EquatableMixin {
   })  : spots = spots ?? const [],
         show = show ?? true,
         color = color ?? Colors.redAccent,
-        barWidth = barWidth ?? 2.0,
+        width = barWidth ?? 2.0,
         isCurved = isCurved ?? false,
         curveSmoothness = curveSmoothness ?? 0.35,
         preventCurveOverShooting = preventCurveOverShooting ?? false,
@@ -319,7 +366,7 @@ class ScopeChartBarData with EquatableMixin {
 
   /// Copies current [LineChartBarData] to a new [LineChartBarData],
   /// and replaces provided values.
-  ScopeChartBarData copyWith({
+  ScopeChannelData copyWith({
     List<FlSpot>? spots,
     bool? show,
     Color? color,
@@ -330,10 +377,10 @@ class ScopeChartBarData with EquatableMixin {
     double? preventCurveOvershootingThreshold,
     Shadow? shadow,
   }) {
-    return ScopeChartBarData(
+    return ScopeChannelData(
       spots: spots ?? this.spots,
       show: show ?? this.show,
-      barWidth: barWidth ?? this.barWidth,
+      barWidth: barWidth ?? this.width,
       isCurved: isCurved ?? this.isCurved,
       curveSmoothness: curveSmoothness ?? this.curveSmoothness,
       preventCurveOverShooting: preventCurveOverShooting ?? this.preventCurveOverShooting,
@@ -349,7 +396,7 @@ class ScopeChartBarData with EquatableMixin {
         spots,
         show,
         color,
-        barWidth,
+        width,
         isCurved,
         curveSmoothness,
         preventCurveOverShooting,
@@ -359,21 +406,21 @@ class ScopeChartBarData with EquatableMixin {
 }
 
 /// Represent a targeted spot inside a line bar.
-class ScopeBarSpot extends FlSpot with EquatableMixin {
+class ScopeChannelSpot extends FlSpot with EquatableMixin {
   /// Is the [LineChartBarData] that this spot is inside of.
-  final ScopeChartBarData bar;
+  final ScopeChannelData bar;
 
-  /// Is the index of our [bar], in the [LineChartData.lineBarsData] list,
+  /// Is the index of our [bar], in the [LineChartData.channelsData] list,
   final int barIndex;
 
   /// Is the index of our [super.spot], in the [LineChartBarData.spots] list.
   final int spotIndex;
 
   /// [bar] is the [LineChartBarData] that this spot is inside of,
-  /// [barIndex] is the index of our [bar], in the [LineChartData.lineBarsData] list,
+  /// [barIndex] is the index of our [bar], in the [LineChartData.channelsData] list,
   /// [spot] is the targeted spot.
   /// [spotIndex] is the index this [FlSpot], in the [LineChartBarData.spots] list.
-  ScopeBarSpot(
+  ScopeChannelSpot(
     this.bar,
     this.barIndex,
     FlSpot spot,
