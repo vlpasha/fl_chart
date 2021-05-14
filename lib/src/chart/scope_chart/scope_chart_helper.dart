@@ -8,9 +8,9 @@ class ScopeChartHelper {
   /// Contains List of cached results, base on [List<LineChartBarData>]
   ///
   /// We use it to prevent redundant calculations
-  static final Map<ListWrapper<ScopeChartBarData>, ScopeChartMinMaxAxisValues> _cachedResults = {};
+  static final Map<ListWrapper<ScopeChannelData>, ScopeChartMinMaxAxisValues> _cachedResults = {};
 
-  static ScopeChartMinMaxAxisValues calculateMaxAxisValues(List<ScopeChartBarData> lineBarsData) {
+  static ScopeChartMinMaxAxisValues calculateMaxAxisValues(List<ScopeChannelData> lineBarsData) {
     if (lineBarsData.isEmpty) {
       return ScopeChartMinMaxAxisValues(0, 0, 0, 0);
     }
