@@ -53,7 +53,7 @@ class ScopeChart extends StatefulWidget {
   final ScopeAxesData? axes;
   final double? minY;
   final double? maxY;
-  final bool? pause;
+  // final bool? pause;
   const ScopeChart({
     Key? key,
     int? timeWindow,
