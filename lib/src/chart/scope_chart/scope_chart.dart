@@ -185,6 +185,8 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
                         ))
                     .toList(),
                 clipData: FlClipData.all(),
+                minY: widget.minY,
+                maxY: widget.maxY,
                 minX: now.toDouble(),
                 maxX: (now + widget.timeWindow).toDouble(),
               ),
