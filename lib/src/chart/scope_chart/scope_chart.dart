@@ -7,6 +7,8 @@ import 'package:fl_chart/src/chart/base/axis_chart/axis_chart_data.dart';
 import 'scope_chart_data.dart';
 import 'scope_chart_renderer.dart';
 
+typedef Future<void> ValueCallback(ScopeChartChannel channel, ScopeChartChannelValue value);
+
 class ScopeChartChannelValue {
   final double value;
   final int timestamp;
@@ -17,6 +19,7 @@ class ScopeChartChannel {
   final bool show;
   final Color color;
   final double width;
+  final ScopeAxis axis;
   final Stream<ScopeChartChannelValue> valuesStream;
   final List<FlSpot> _spots = [];
 
@@ -27,18 +30,17 @@ class ScopeChartChannel {
   ScopeChartChannel({
     required this.valuesStream,
     required this.color,
-    this.width = 2.0,
-    this.show = true,
-  });
+    double? width,
+    bool? show,
+    ScopeAxis? axis,
+  })  : width = width ?? 2.0,
+        show = show ?? true,
+        axis = axis ?? ScopeAxis();
 
   void addSpot(FlSpot value) => _spots.add(value);
   void removeSpot(int index) => _spots.removeAt(index);
-  void listen(
-      Future<void> Function(
-    ScopeChartChannel channel,
-    ScopeChartChannelValue value,
-  )
-          onValue) {
+  void clearSpots() => _spots.clear();
+  void listen(ValueCallback onValue) {
     _subscr = valuesStream.listen((event) => _subscr.pause(onValue(this, event)));
   }
 
@@ -51,6 +53,7 @@ class ScopeChart extends StatefulWidget {
   final ScopeAxesData? axes;
   final double? minY;
   final double? maxY;
+  final bool? pause;
   const ScopeChart({
     Key? key,
     int? timeWindow,
@@ -71,6 +74,10 @@ class ScopeChart extends StatefulWidget {
 class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late int _startTime;
+  late int _deltaTime;
+  late int _startTimestamp;
+  bool _timeSync = false;
+  bool _overflow = false;
   final _axesData = ScopeAxesData(
     vertical: ScopeAxis(
       showAxis: true,
@@ -103,14 +110,27 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
   );
 
   Future<void> _updateSpots(ScopeChartChannel channel, ScopeChartChannelValue event) {
+    if (_timeSync != true) {
+      _startTimestamp = event.timestamp;
+      _startTime = DateTime.now().millisecondsSinceEpoch;
+      _timeSync = true;
+    }
+
+    if (event.timestamp < _startTimestamp) {
+      _startTimestamp = event.timestamp;
+      _startTime = DateTime.now().millisecondsSinceEpoch;
+      channel.clearSpots();
+    }
+
     if (channel.spots.isNotEmpty &&
         channel.spots.length > 2 &&
-        (channel.spots.last.x - channel.spots.first.x) > widget.timeWindow) {
+        (channel.spots.last.x) > _startTimestamp + widget.timeWindow) {
       channel.removeSpot(0);
+      _overflow = true;
     }
     channel.addSpot(
       FlSpot(
-        (event.timestamp - _startTime).toDouble(),
+        (event.timestamp).toDouble(),
         event.value,
       ),
     );
@@ -119,12 +139,12 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
 
   @override
   void initState() {
-    _startTime = DateTime.now().millisecondsSinceEpoch;
     widget.channels.forEach((channel) => channel.listen(_updateSpots));
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(seconds: 1),
-    )..repeat();
+    );
+    _animationController.repeat();
     super.initState();
   }
 
@@ -139,7 +159,15 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: _animationController,
         builder: (_, __) {
-          final now = DateTime.now().millisecondsSinceEpoch - _startTime;
+          var now = 0;
+          if (_timeSync != false) {
+            var elapsed = DateTime.now().millisecondsSinceEpoch - _startTime;
+            if (_overflow != true) {
+              now = _startTimestamp;
+            } else {
+              now = _startTimestamp + elapsed - widget.timeWindow;
+            }
+          }
           return CustomPaint(
             painter: RenderScopeChart(
               ScopeChartData(
@@ -157,10 +185,8 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
                         ))
                     .toList(),
                 clipData: FlClipData.all(),
-                minX: (now - widget.timeWindow).toDouble(),
-                maxX: now.toDouble(),
-                minY: widget.minY,
-                maxY: widget.maxY,
+                minX: now.toDouble(),
+                maxX: (now + widget.timeWindow).toDouble(),
               ),
               MediaQuery.of(context).textScaleFactor,
             ),
