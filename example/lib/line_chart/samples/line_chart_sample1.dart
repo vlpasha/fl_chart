@@ -178,14 +178,17 @@ class ScopeChartSample extends StatefulWidget {
 
 class _ScopeChartSampleState extends State<ScopeChartSample> {
   var rnd = Random();
-  int timeStep = 100;
+  int timeStep = 30;
   double radians = 0.0;
+  bool stop = false;
+  int axisIndex = 0;
 
   int startTime = 0;
   final List<StreamController<ScopeChartChannelValue>> _streams = [
-    StreamController(),
-    StreamController(),
-    StreamController(),
+    StreamController.broadcast(),
+    StreamController.broadcast(),
+    StreamController.broadcast(),
+    StreamController.broadcast(),
   ];
   List<ScopeChartChannel> _channels;
   Timer _timer;
@@ -194,19 +197,44 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
   void initState() {
     _channels = [
       ScopeChartChannel(
+        id: '0',
         show: true,
         color: Colors.red,
         valuesStream: _streams[0].stream,
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'sin'),
+          titles: ScopeAxisTitles(reservedSize: 50),
+        ),
       ),
       ScopeChartChannel(
+        id: '1',
         show: true,
         color: Colors.green,
         valuesStream: _streams[1].stream,
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'atan'),
+          titles: ScopeAxisTitles(reservedSize: 50),
+        ),
       ),
       ScopeChartChannel(
+        id: '2',
         show: true,
         color: Colors.blue,
         valuesStream: _streams[2].stream,
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'cos'),
+          titles: ScopeAxisTitles(reservedSize: 50),
+        ),
+      ),
+      ScopeChartChannel(
+        id: '3',
+        show: true,
+        color: Colors.blue,
+        valuesStream: _streams[3].stream,
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'zero'),
+          titles: ScopeAxisTitles(reservedSize: 50),
+        ),
       ),
     ];
 
@@ -221,7 +249,11 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
         timestamp: _timestamp,
       ));
       _streams[2].add(ScopeChartChannelValue(
-        value: cos((radians * pi)) * 500,
+        value: cos((radians * pi)),
+        timestamp: _timestamp,
+      ));
+      _streams[3].add(ScopeChartChannelValue(
+        value: 0,
         timestamp: _timestamp,
       ));
       radians += 0.05;
@@ -240,12 +272,20 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
 
   @override
   Widget build(BuildContext context) {
-    return ScopeChart(
-      timeWindow: Duration(seconds: 10).inMilliseconds,
-      channels: _channels,
-      minY: -1000,
-      maxY: 1000,
-    );
+    return GestureDetector(
+        onDoubleTap: () {
+          setState(() => stop = !stop);
+        },
+        onTap: () {
+          setState(() => axisIndex < (_channels.length - 1) ? axisIndex++ : axisIndex = 0);
+        },
+        child: ScopeChart(
+          timeWindow: const Duration(seconds: 5).inMilliseconds,
+          channels: _channels,
+          channelAxisIndex: axisIndex,
+          stopped: stop,
+          // timeAxis: const ScopeAxis(),
+        ));
   }
 }
 

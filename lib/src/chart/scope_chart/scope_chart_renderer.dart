@@ -29,18 +29,19 @@ import 'scope_chart_painter.dart';
 class RenderScopeChart extends CustomPainter {
   final ScopeChartData _data;
   final double _textScale;
-  RenderScopeChart(ScopeChartData data, double textScale)
-      : _data = data,
-        _textScale = textScale;
+  RenderScopeChart({
+    required ScopeChartData data,
+    required double textScale,
+  })  : _data = data,
+        _textScale = textScale,
+        super(repaint: data.channelsData);
 
   final _painter = ScopeChartPainter();
 
-  ScopePaintHolder get paintHolder {
-    return ScopePaintHolder(_data, _textScale);
-  }
+  ScopePaintHolder get paintHolder => ScopePaintHolder(_data, _textScale);
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => oldDelegate != this;
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 
   @override
   void paint(Canvas canvas, Size size) {
