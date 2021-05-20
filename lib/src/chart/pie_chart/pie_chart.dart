@@ -34,13 +34,12 @@ class _PieChartState extends AnimatedWidgetBaseState<PieChart> {
 
   @override
   void initState() {
-    /// Make sure that [_widgetsPositionHandler] is updated.
+    super.initState();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       if (mounted) {
         setState(() {});
       }
     });
-    super.initState();
   }
 
   @override

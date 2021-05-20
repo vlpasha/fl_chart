@@ -176,10 +176,8 @@ class ScopeChartPainter {
     /// Draw Left Line
     final leftBorder = borderData.border.left;
     if (leftBorder.width != 0.0) {
-      _borderPaint.color =
-          data.activeChannel != null ? data.activeChannel!.color : leftBorder.color;
-      _borderPaint.strokeWidth =
-          data.activeChannel != null ? data.activeChannel!.width : leftBorder.width;
+      _borderPaint.color = leftBorder.color;
+      _borderPaint.strokeWidth = leftBorder.width;
       _borderPaint.transparentIfWidthIsZero();
       canvasWrapper.drawLine(bottomLeft, topLeft, _borderPaint);
     }

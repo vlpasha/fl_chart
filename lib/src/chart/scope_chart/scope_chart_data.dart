@@ -392,8 +392,7 @@ class ScopeChannelData with EquatableMixin {
     calculateMaxAxisValues();
   }
 
-  void calculateMaxAxisValues() =>
-      _dynamicLimits = ScopeChartHelper.calculateMaxAxisValues(this);
+  void calculateMaxAxisValues() => _dynamicLimits = ScopeChartHelper.calculateMaxAxisValues(this);
 
   /// Copies current [LineChartBarData] to a new [LineChartBarData],
   /// and replaces provided values.
@@ -417,10 +416,9 @@ class ScopeChannelData with EquatableMixin {
       width: width ?? this.width,
       isCurved: isCurved ?? this.isCurved,
       curveSmoothness: curveSmoothness ?? this.curveSmoothness,
-      preventCurveOverShooting:
-          preventCurveOverShooting ?? this.preventCurveOverShooting,
-      preventCurveOvershootingThreshold: preventCurveOvershootingThreshold ??
-          this.preventCurveOvershootingThreshold,
+      preventCurveOverShooting: preventCurveOverShooting ?? this.preventCurveOverShooting,
+      preventCurveOvershootingThreshold:
+          preventCurveOvershootingThreshold ?? this.preventCurveOvershootingThreshold,
       shadow: shadow ?? this.shadow,
       axis: axis ?? this.axis,
     );
