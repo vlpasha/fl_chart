@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fimber/fimber.dart';
 import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/widgets.dart';
@@ -16,7 +17,10 @@ typedef ValueCallback = Future<void> Function(
 class ScopeChartChannelValue {
   final double value;
   final int timestamp;
-  ScopeChartChannelValue({required this.value, required this.timestamp});
+  ScopeChartChannelValue({
+    required this.value,
+    required this.timestamp,
+  });
 }
 
 class ScopeChartChannel {
@@ -50,7 +54,8 @@ class ScopeChartChannel {
   // void clearSpots() => _spots.clear();
   void listen(ValueCallback onValue) async {
     await _subscr?.cancel();
-    _subscr = valuesStream.listen((event) => _subscr!.pause(onValue(this, event)));
+    _subscr =
+        valuesStream.listen((event) => _subscr!.pause(onValue(this, event)));
   }
 
   void cancel() => _subscr?.cancel();
@@ -62,6 +67,7 @@ class ScopeChart extends StatefulWidget {
   final ScopeAxis? timeAxis;
   final bool stopped;
   final int channelAxisIndex;
+  final Stream<bool> resetSync;
   const ScopeChart({
     Key? key,
     this.timeWindow = 1000,
@@ -69,16 +75,21 @@ class ScopeChart extends StatefulWidget {
     this.timeAxis,
     this.stopped = false,
     this.channelAxisIndex = 0,
+    this.resetSync = const Stream.empty(),
   }) : super(key: key);
   @override
   State<ScopeChart> createState() => _ScopeChartState();
 }
 
-class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateMixin {
+class _ScopeChartState extends State<ScopeChart>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late int _startTime;
-  late int _startTimestamp;
   late ValueNotifier<Iterable<ScopeChannelData>> _channelsData;
+
+  StreamSubscription<bool>? _resetSyncSubscr;
+  int _startTime = 0;
+  int _elapsedTime = 0;
+  int _startTimestamp = 0;
 
   final _timeAxis = ScopeAxis(
     interval: 1000,
@@ -98,9 +109,9 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
     ),
   );
   final Map<String, ScopeChannelData> _channels = {};
-
   bool _timeSync = false;
   int axisIndex = 0;
+
   Future<void> _updateSpots(
     ScopeChartChannel channel,
     ScopeChartChannelValue event,
@@ -113,15 +124,17 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
         _timeSync = true;
       }
 
-      if (event.timestamp < _startTimestamp) {
+      if (event.timestamp <= _startTimestamp) {
         _startTimestamp = event.timestamp;
         _startTime = DateTime.now().millisecondsSinceEpoch;
       }
 
-      _channel.spots.removeWhere((element) => element.x > event.timestamp.toDouble());
+      _channel.spots
+          .removeWhere((element) => element.x > event.timestamp.toDouble());
 
       if (_channel.spots.isNotEmpty &&
-          (_channel.spots.last.x - _channel.spots.first.x) > widget.timeWindow * 2) {
+          (_channel.spots.last.x - _channel.spots.first.x) >
+              widget.timeWindow * 2) {
         _channel.spots.removeAt(0);
       }
 
@@ -140,10 +153,11 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
       _channels.clear();
     } else {
       // remove unused
-      _channels.removeWhere(
-          (key, value) => widget.channels.firstWhereOrNull((ch) => ch.id == key) == null);
+      _channels.removeWhere((key, value) =>
+          widget.channels.firstWhereOrNull((ch) => ch.id == key) == null);
       // add new
-      for (var channel in widget.channels.where((ch) => _channels.containsKey(ch.id) == false)) {
+      for (var channel in widget.channels
+          .where((ch) => _channels.containsKey(ch.id) == false)) {
         _channels[channel.id] = ScopeChannelData(
           id: channel.id,
           show: channel.show,
@@ -167,6 +181,12 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(seconds: 1),
     );
+    _resetSyncSubscr = widget.resetSync.listen((event) => setState(() {
+          _timeSync = false;
+          _startTime = 0;
+          _startTimestamp = 0;
+          _elapsedTime = 0;
+        }));
   }
 
   @override
@@ -175,6 +195,7 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
       channel.cancel();
     }
     _animationController.stop();
+    _resetSyncSubscr?.cancel();
     super.dispose();
   }
 
@@ -187,18 +208,19 @@ class _ScopeChartState extends State<ScopeChart> with SingleTickerProviderStateM
       _animationController.repeat();
     }
 
-    final activeChannel =
-        _channels.values.isNotEmpty ? _channels.values.elementAt(widget.channelAxisIndex) : null;
+    final activeChannel = _channels.values.isNotEmpty
+        ? _channels.values.elementAt(widget.channelAxisIndex)
+        : null;
     return AnimatedBuilder(
       animation: _animationController,
       builder: (_, __) {
         var now = 0;
         if (_timeSync != false) {
-          var elapsed = DateTime.now().millisecondsSinceEpoch - _startTime;
-          if (elapsed < widget.timeWindow) {
+          _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
+          if (_elapsedTime < widget.timeWindow) {
             now = _startTimestamp;
           } else {
-            now = _startTimestamp + elapsed - widget.timeWindow;
+            now = _startTimestamp + _elapsedTime - widget.timeWindow;
           }
         }
         return CustomPaint(

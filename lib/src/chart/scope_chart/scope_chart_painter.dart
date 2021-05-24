@@ -196,7 +196,17 @@ class ScopeChartPainter {
         // draw axis title
         if (verticalAxis.title.showTitle) {
           final title = verticalAxis.title;
-          final tp = title.getTextPainter(holder.textScale, viewSize.height);
+          final span = TextSpan(
+            style: title.textStyle.copyWith(color: channel.color),
+            text: title.titleText,
+          );
+          final tp = TextPainter(
+            text: span,
+            textAlign: title.textAlign,
+            textDirection: title.textDirection,
+            textScaleFactor: holder.textScale,
+          );
+          tp.layout(minWidth: viewSize.height);
           canvasWrapper.save();
           canvasWrapper.rotate(-math.pi * 0.5);
           canvasWrapper.drawText(
@@ -248,7 +258,16 @@ class ScopeChartPainter {
                 Offset(x1, y1), Offset(x2, y2), _axesPaint, flLine.dashArray);
           }
           if (titles.showTitles != false) {
-            final tp = titles.getTextPainter(verticalSeek, holder.textScale);
+            final span = TextSpan(
+                style: titles.getTextStyles(verticalSeek).copyWith(color: channel.color),
+                text: titles.getTitles(verticalSeek));
+            final tp = TextPainter(
+              text: span,
+              textAlign: TextAlign.center,
+              textDirection: titles.textDirection,
+              textScaleFactor: holder.textScale,
+            );
+            tp.layout();
             var x = 0 + _getLeftOffsetDrawSize(holder);
             var y = _getPixelY(
               verticalSeek,
@@ -288,7 +307,14 @@ class ScopeChartPainter {
       // draw axis title
       if (horizontalAxis.title.showTitle) {
         final title = horizontalAxis.title;
-        final tp = title.getTextPainter(holder.textScale, viewSize.width);
+        final span = TextSpan(style: title.textStyle, text: title.titleText);
+        final tp = TextPainter(
+          text: span,
+          textAlign: title.textAlign,
+          textDirection: title.textDirection,
+          textScaleFactor: holder.textScale,
+        );
+        tp.layout(minWidth: viewSize.width);
         canvasWrapper.drawText(
             tp,
             Offset(_getLeftOffsetDrawSize(holder),
@@ -341,7 +367,15 @@ class ScopeChartPainter {
           );
         }
         if (titles.showTitles) {
-          final tp = titles.getTextPainter(horizontalSeek, holder.textScale);
+          final span = TextSpan(
+              style: titles.getTextStyles(horizontalSeek), text: titles.getTitles(horizontalSeek));
+          final tp = TextPainter(
+            text: span,
+            textAlign: TextAlign.center,
+            textDirection: titles.textDirection,
+            textScaleFactor: holder.textScale,
+          );
+          tp.layout();
           var x = _getPixelX(horizontalSeek, min, max, viewSize, holder);
           var y = viewSize.height;
           x -= tp.width / 2;
@@ -377,7 +411,14 @@ class ScopeChartPainter {
       final legend = data.legendData;
       var bothY = legend.offset.dy;
       for (var channel in data.channelsData.value.where((element) => element.show != false)) {
-        final tp = legend.getTextPainter(channel.axis.title.titleText, holder.textScale);
+        final span = TextSpan(style: legend.textStyle, text: channel.axis.title.titleText);
+        final tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr,
+          textScaleFactor: holder.textScale,
+        );
+        tp.layout();
         final x1 = _getLeftOffsetDrawSize(holder) + legend.offset.dx;
         final x2 = x1 + legend.size;
         final x3 = x2 + tp.height / 2;

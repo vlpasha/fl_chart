@@ -41,7 +41,8 @@ class RenderScopeChart extends CustomPainter {
   ScopePaintHolder get paintHolder => ScopePaintHolder(_data, _textScale);
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  bool shouldRepaint(RenderScopeChart oldDelegate) =>
+      oldDelegate._data != this._data;
 
   @override
   void paint(Canvas canvas, Size size) {
