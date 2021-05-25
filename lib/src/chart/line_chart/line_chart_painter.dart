@@ -888,11 +888,32 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
 
     // Left Titles
     final leftTitles = targetData.titlesData.leftTitles;
+    final tpMaxLeft = TextPainter(
+        text: TextSpan(
+          style: leftTitles.textStyle,
+          text: leftTitles.getTitles(data.maxY),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: leftTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout(maxWidth: getExtraNeededHorizontalSpace(holder));
+    final tpMinLeft = TextPainter(
+        text: TextSpan(
+          style: leftTitles.textStyle,
+          text: leftTitles.getTitles(data.minY),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: leftTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout(maxWidth: getExtraNeededHorizontalSpace(holder));
+
     final leftInterval = leftTitles.interval ??
-        getEfficientInterval(viewSize.height, data.verticalDiff);
+        getEfficientInterval(viewSize.height, data.verticalDiff,
+            pixelPerInterval: tpMaxLeft.height > tpMinLeft.height
+                ? tpMaxLeft.height * 2
+                : tpMinLeft.height * 2);
     if (leftTitles.showTitles) {
       var verticalSeek = data.minY;
-      double? lastTitleY;
       while (verticalSeek <= data.maxY) {
         var x = 0 + getLeftOffsetDrawSize(holder);
         var y = getPixelY(verticalSeek, viewSize, holder);
@@ -909,9 +930,7 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
         y -= tp.height / 2;
         final showTitle = leftTitles.checkToShowTitle(
             data.minY, data.maxY, leftTitles, leftInterval, verticalSeek);
-        final skipTitle = lastTitleY != null && lastTitleY - tp.height < y;
-        if (showTitle != false && skipTitle != true) {
-          lastTitleY = y;
+        if (showTitle != false) {
           canvasWrapper.save();
           canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
           canvasWrapper.rotate(radians(leftTitles.rotateAngle));
@@ -931,8 +950,30 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
 
     // Top titles
     final topTitles = targetData.titlesData.topTitles;
+    final tpMaxTop = TextPainter(
+        text: TextSpan(
+          style: topTitles.textStyle,
+          text: topTitles.getTitles(data.maxX),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: topTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout();
+    final tpMinTop = TextPainter(
+        text: TextSpan(
+          style: topTitles.textStyle,
+          text: topTitles.getTitles(data.minX),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: topTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout();
+
     final topInterval = topTitles.interval ??
-        getEfficientInterval(viewSize.width, data.horizontalDiff);
+        getEfficientInterval(viewSize.width, data.horizontalDiff,
+            pixelPerInterval: tpMaxTop.width > tpMinTop.width
+                ? tpMaxTop.width * 2 + 5
+                : tpMinTop.width * 2 + 5);
     if (topTitles.showTitles) {
       var horizontalSeek = data.minX;
       double? lastTitleX;
@@ -973,8 +1014,28 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
 
     // Right Titles
     final rightTitles = targetData.titlesData.rightTitles;
+    final tpMaxRight = TextPainter(
+        text: TextSpan(
+            style: rightTitles.textStyle,
+            text: rightTitles.getTitles(data.maxY)),
+        textAlign: TextAlign.center,
+        textDirection: rightTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout(maxWidth: getExtraNeededHorizontalSpace(holder));
+    final tpMinRight = TextPainter(
+        text: TextSpan(
+            style: rightTitles.textStyle,
+            text: rightTitles.getTitles(data.minY)),
+        textAlign: TextAlign.center,
+        textDirection: rightTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout(maxWidth: getExtraNeededHorizontalSpace(holder));
+
     final rightInterval = rightTitles.interval ??
-        getEfficientInterval(viewSize.height, data.verticalDiff);
+        getEfficientInterval(viewSize.height, data.verticalDiff,
+            pixelPerInterval: tpMaxRight.height > tpMinRight.height
+                ? tpMaxRight.height * 2
+                : tpMinRight.height * 2);
     if (rightTitles.showTitles) {
       var verticalSeek = data.minY;
       double? lastTitleY;
@@ -1016,11 +1077,30 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
 
     // Bottom titles
     final bottomTitles = targetData.titlesData.bottomTitles;
+    final tpMaxBottom = TextPainter(
+        text: TextSpan(
+            style: bottomTitles.textStyle,
+            text: bottomTitles.getTitles(data.maxX)),
+        textAlign: TextAlign.center,
+        textDirection: bottomTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout();
+    final tpMinBottom = TextPainter(
+        text: TextSpan(
+            style: bottomTitles.textStyle,
+            text: bottomTitles.getTitles(data.minX)),
+        textAlign: TextAlign.center,
+        textDirection: bottomTitles.textDirection,
+        textScaleFactor: holder.textScale)
+      ..layout();
+
     final bottomInterval = bottomTitles.interval ??
-        getEfficientInterval(viewSize.width, data.horizontalDiff);
+        getEfficientInterval(viewSize.width, data.horizontalDiff,
+            pixelPerInterval: tpMaxBottom.width > tpMinBottom.width
+                ? tpMaxBottom.width * 2 + 5
+                : tpMinBottom.width * 2 + 5);
     if (bottomTitles.showTitles) {
       var horizontalSeek = data.minX;
-      double? lastTitleX;
       while (horizontalSeek <= data.maxX) {
         var x = getPixelX(horizontalSeek, viewSize, holder);
         var y = viewSize.height + getTopOffsetDrawSize(holder);
@@ -1036,8 +1116,7 @@ class LineChartPainter extends AxisChartPainter<LineChartData> {
         y += bottomTitles.margin;
         final showTitle = bottomTitles.checkToShowTitle(
             data.minX, data.maxX, bottomTitles, bottomInterval, horizontalSeek);
-        final skipTitle = lastTitleX != null && lastTitleX + tp.width > x;
-        if (showTitle != false && skipTitle != true) {
+        if (showTitle != false) {
           canvasWrapper.save();
           canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
           canvasWrapper.rotate(radians(bottomTitles.rotateAngle));
