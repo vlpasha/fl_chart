@@ -49,9 +49,6 @@ class ScopeChartChannel {
     _subscr?.cancel();
   }
 
-  // void addSpot(FlSpot value) => _spots.add(value);
-  // void removeSpot(int index) => _spots.removeAt(index);
-  // void clearSpots() => _spots.clear();
   void listen(ValueCallback onValue) async {
     await _subscr?.cancel();
     _subscr =
