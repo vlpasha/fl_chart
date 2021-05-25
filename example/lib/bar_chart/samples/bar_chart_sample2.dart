@@ -103,7 +103,8 @@ class BarChartSample2State extends State<BarChartSample2> {
                               return;
                             }
 
-                            touchedGroupIndex = response.spot.touchedBarGroupIndex;
+                            touchedGroupIndex =
+                                response.spot.touchedBarGroupIndex;
 
                             setState(() {
                               if (response.touchInput is PointerExitEvent ||
@@ -115,15 +116,21 @@ class BarChartSample2State extends State<BarChartSample2> {
                                 if (touchedGroupIndex != -1) {
                                   double sum = 0;
                                   for (BarChartRodData rod
-                                      in showingBarGroups[touchedGroupIndex].barRods) {
+                                      in showingBarGroups[touchedGroupIndex]
+                                          .barRods) {
                                     sum += rod.y;
                                   }
-                                  final avg =
-                                      sum / showingBarGroups[touchedGroupIndex].barRods.length;
+                                  final avg = sum /
+                                      showingBarGroups[touchedGroupIndex]
+                                          .barRods
+                                          .length;
 
                                   showingBarGroups[touchedGroupIndex] =
-                                      showingBarGroups[touchedGroupIndex].copyWith(
-                                    barRods: showingBarGroups[touchedGroupIndex].barRods.map((rod) {
+                                      showingBarGroups[touchedGroupIndex]
+                                          .copyWith(
+                                    barRods: showingBarGroups[touchedGroupIndex]
+                                        .barRods
+                                        .map((rod) {
                                       return rod.copyWith(y: avg);
                                     }).toList(),
                                   );
@@ -135,8 +142,10 @@ class BarChartSample2State extends State<BarChartSample2> {
                         show: true,
                         bottomTitles: SideTitles(
                           showTitles: true,
-                          getTextStyles: (value) => const TextStyle(
-                              color: Color(0xff7589a2), fontWeight: FontWeight.bold, fontSize: 14),
+                          textStyle: const TextStyle(
+                              color: Color(0xff7589a2),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14),
                           margin: 20,
                           getTitles: (double value) {
                             switch (value.toInt()) {
@@ -161,8 +170,10 @@ class BarChartSample2State extends State<BarChartSample2> {
                         ),
                         leftTitles: SideTitles(
                           showTitles: true,
-                          getTextStyles: (value) => const TextStyle(
-                              color: Color(0xff7589a2), fontWeight: FontWeight.bold, fontSize: 14),
+                          textStyle: const TextStyle(
+                              color: Color(0xff7589a2),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14),
                           margin: 32,
                           reservedSize: 14,
                           getTitles: (value) {

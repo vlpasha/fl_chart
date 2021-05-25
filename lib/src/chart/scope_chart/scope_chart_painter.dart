@@ -223,17 +223,19 @@ class ScopeChartPainter {
           viewSize.height,
           verticalDiff,
         );
-        var interval =
-            (verticalAxis.interval != null) && (verticalAxis.interval! > efficientInterval)
-                ? verticalAxis.interval!
-                : efficientInterval;
+        var interval = (verticalAxis.interval != null) &&
+                (verticalAxis.interval! > efficientInterval)
+            ? verticalAxis.interval!
+            : efficientInterval;
 
         var verticalSeek = channel.minY;
 
         final count = verticalDiff ~/ interval;
         final lastPosition = count * verticalSeek;
         final lastPositionOverlapsWithBorder = lastPosition == channel.maxY;
-        final end = lastPositionOverlapsWithBorder ? (channel.maxY - interval) : channel.maxY;
+        final end = lastPositionOverlapsWithBorder
+            ? (channel.maxY - interval)
+            : channel.maxY;
         double? lastTitleY;
 
         while (verticalSeek <= end) {
@@ -259,7 +261,9 @@ class ScopeChartPainter {
           }
           if (titles.showTitles != false) {
             final span = TextSpan(
-                style: titles.getTextStyles(verticalSeek).copyWith(color: channel.color),
+                style: titles
+                    .getTextStyles(verticalSeek)
+                    .copyWith(color: channel.color),
                 text: titles.getTitles(verticalSeek));
             final tp = TextPainter(
               text: span,
@@ -291,7 +295,8 @@ class ScopeChartPainter {
               canvasWrapper.save();
               canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
               canvasWrapper.rotate(utils.radians(titles.rotateAngle));
-              canvasWrapper.translate(-(x + tp.width / 2), -(y + tp.height / 2));
+              canvasWrapper.translate(
+                  -(x + tp.width / 2), -(y + tp.height / 2));
               y -= utils.translateRotatedPosition(tp.width, titles.rotateAngle);
               canvasWrapper.drawText(tp, Offset(x, y));
               canvasWrapper.restore();
@@ -330,7 +335,8 @@ class ScopeChartPainter {
         viewSize.width,
         horizontalDiff,
       );
-      var interval = horizontalAxis.interval != null && horizontalAxis.interval! > efficientInterval
+      var interval = horizontalAxis.interval != null &&
+              horizontalAxis.interval! > efficientInterval
           ? horizontalAxis.interval!
           : efficientInterval;
       final delta = max - min;
@@ -368,7 +374,8 @@ class ScopeChartPainter {
         }
         if (titles.showTitles) {
           final span = TextSpan(
-              style: titles.getTextStyles(horizontalSeek), text: titles.getTitles(horizontalSeek));
+              style: titles.getTextStyles(horizontalSeek),
+              text: titles.getTitles(horizontalSeek));
           final tp = TextPainter(
             text: span,
             textAlign: TextAlign.center,
@@ -410,8 +417,10 @@ class ScopeChartPainter {
     if (data.legendData.showLegend != false) {
       final legend = data.legendData;
       var bothY = legend.offset.dy;
-      for (var channel in data.channelsData.value.where((element) => element.show != false)) {
-        final span = TextSpan(style: legend.textStyle, text: channel.axis.title.titleText);
+      for (var channel in data.channelsData.value
+          .where((element) => element.show != false)) {
+        final span = TextSpan(
+            style: legend.textStyle, text: channel.axis.title.titleText);
         final tp = TextPainter(
           text: span,
           textAlign: TextAlign.left,
@@ -565,12 +574,14 @@ class ScopeChartPainter {
 
       if (barData.preventCurveOverShooting) {
         if ((next - current).dy <= barData.preventCurveOvershootingThreshold ||
-            (current - previous).dy <= barData.preventCurveOvershootingThreshold) {
+            (current - previous).dy <=
+                barData.preventCurveOvershootingThreshold) {
           temp = Offset(temp.dx, 0);
         }
 
         if ((next - current).dx <= barData.preventCurveOvershootingThreshold ||
-            (current - previous).dx <= barData.preventCurveOvershootingThreshold) {
+            (current - previous).dx <=
+                barData.preventCurveOvershootingThreshold) {
           temp = Offset(0, temp.dy);
         }
       }
@@ -692,7 +703,8 @@ class ScopeChartPainter {
     if (deltaX == 0.0) {
       return _getLeftOffsetDrawSize(holder);
     }
-    return (((spotX - minX) / deltaX) * chartUsableSize.width) + _getLeftOffsetDrawSize(holder);
+    return (((spotX - minX) / deltaX) * chartUsableSize.width) +
+        _getLeftOffsetDrawSize(holder);
   }
 
   /// With this function we can convert our [FlSpot] y
