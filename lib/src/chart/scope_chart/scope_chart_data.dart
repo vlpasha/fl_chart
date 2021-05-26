@@ -33,6 +33,7 @@ class ScopeBorderData with EquatableMixin {
 
 class ScopeAxisTitle with EquatableMixin {
   final bool showTitle;
+  final bool colorize;
   final String titleText;
   final double reservedSize;
   final TextStyle textStyle;
@@ -42,16 +43,18 @@ class ScopeAxisTitle with EquatableMixin {
 
   const ScopeAxisTitle({
     this.showTitle = false,
+    this.colorize = false,
     this.titleText = '',
     this.reservedSize = 14,
-    this.textStyle = const TextStyle(
-      color: Colors.black,
-      fontSize: 11,
-    ),
+    TextStyle? textStyle,
     this.textDirection = TextDirection.ltr,
     this.textAlign = TextAlign.center,
     this.margin = 4,
-  });
+  }) : textStyle = textStyle ??
+            const TextStyle(
+              color: Colors.black,
+              fontSize: 11,
+            );
 
   ScopeAxisTitle copyWith({
     bool? showTitle,
@@ -101,28 +104,34 @@ class ScopeAxisTitle with EquatableMixin {
 
 class ScopeAxisTitles with EquatableMixin {
   final bool showTitles;
+  final bool colorize;
   final GetTitleFunction getTitles;
   final double reservedSize;
-  final GetTitleTextStyleFunction getTextStyles;
+  final TextStyle textStyle;
   final TextDirection textDirection;
   final double margin;
   final double rotateAngle;
 
   const ScopeAxisTitles({
     this.showTitles = true,
+    this.colorize = false,
     this.getTitles = defaultGetTitle,
     this.reservedSize = 22,
-    this.getTextStyles = defaultGetTitleTextStyle,
+    TextStyle? textStyle,
     this.textDirection = TextDirection.ltr,
     this.margin = 6,
     this.rotateAngle = 0.0,
-  });
+  }) : textStyle = textStyle ??
+            const TextStyle(
+              color: Colors.black,
+              fontSize: 11,
+            );
 
   ScopeAxisTitles copyWith({
     bool? showTitles,
     GetTitleFunction? getTitles,
     double? reservedSize,
-    GetTitleTextStyleFunction? getTextStyles,
+    TextStyle? textStyle,
     TextDirection? textDirection,
     double? margin,
     double? rotateAngle,
@@ -131,14 +140,14 @@ class ScopeAxisTitles with EquatableMixin {
         showTitles: showTitles ?? this.showTitles,
         getTitles: getTitles ?? this.getTitles,
         reservedSize: reservedSize ?? this.reservedSize,
-        getTextStyles: getTextStyles ?? this.getTextStyles,
+        textStyle: textStyle ?? this.textStyle,
         textDirection: textDirection ?? this.textDirection,
         margin: margin ?? this.margin,
         rotateAngle: rotateAngle ?? this.rotateAngle,
       );
 
   TextPainter getTextPainter(double value, double textScale) {
-    final span = TextSpan(style: getTextStyles(value), text: getTitles(value));
+    final span = TextSpan(style: textStyle, text: getTitles(value));
     final tp = TextPainter(
       text: span,
       textAlign: TextAlign.center,
@@ -155,7 +164,7 @@ class ScopeAxisTitles with EquatableMixin {
         showTitles,
         getTitles,
         reservedSize,
-        getTextStyles,
+        textStyle,
         margin,
         rotateAngle,
       ];
@@ -225,7 +234,7 @@ class ScopeAxis {
         showAxis: showAxis ?? this.showAxis,
         titles: this.titles.copyWith(
               showTitles: titles?.showTitles,
-              getTextStyles: titles?.getTextStyles,
+              textStyle: titles?.textStyle,
               getTitles: titles?.getTitles,
               margin: titles?.margin,
               reservedSize: titles?.reservedSize,
@@ -263,12 +272,13 @@ class ScopeLegendData with EquatableMixin {
     this.width = 2.0,
     this.offset = const Offset(10.0, 10.0),
     this.size = 20.0,
-    this.textStyle = const TextStyle(
-      color: Colors.black,
-      fontWeight: FontWeight.normal,
-      fontSize: 11,
-    ),
-  });
+    TextStyle? textStyle,
+  }) : textStyle = textStyle ??
+            const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.normal,
+              fontSize: 11,
+            );
 
   ScopeLegendData copyWith({
     bool? showLegend,
@@ -320,13 +330,14 @@ class ScopeChartData with EquatableMixin {
     this.stopped = false,
     this.timeAxis = const ScopeAxis(min: 0, max: 5000),
     this.activeChannel,
-    this.legendData = const ScopeLegendData(),
+    ScopeLegendData? legendData,
     ScopeBorderData? borderData,
     FlClipData? clipData,
     Color? backgroundColor,
   })  : borderData = borderData ?? ScopeBorderData(),
         backgroundColor = backgroundColor ?? Colors.transparent,
-        clipData = clipData ?? FlClipData.none();
+        clipData = clipData ?? FlClipData.none(),
+        legendData = legendData ?? const ScopeLegendData();
 
   ScopeChartData copyWith({
     ValueNotifier<Iterable<ScopeChannelData>>? channels,
@@ -392,7 +403,8 @@ class ScopeChannelData with EquatableMixin {
     calculateMaxAxisValues();
   }
 
-  void calculateMaxAxisValues() => _dynamicLimits = ScopeChartHelper.calculateMaxAxisValues(this);
+  void calculateMaxAxisValues() =>
+      _dynamicLimits = ScopeChartHelper.calculateMaxAxisValues(this);
 
   /// Copies current [LineChartBarData] to a new [LineChartBarData],
   /// and replaces provided values.
@@ -416,9 +428,10 @@ class ScopeChannelData with EquatableMixin {
       width: width ?? this.width,
       isCurved: isCurved ?? this.isCurved,
       curveSmoothness: curveSmoothness ?? this.curveSmoothness,
-      preventCurveOverShooting: preventCurveOverShooting ?? this.preventCurveOverShooting,
-      preventCurveOvershootingThreshold:
-          preventCurveOvershootingThreshold ?? this.preventCurveOvershootingThreshold,
+      preventCurveOverShooting:
+          preventCurveOverShooting ?? this.preventCurveOverShooting,
+      preventCurveOvershootingThreshold: preventCurveOvershootingThreshold ??
+          this.preventCurveOvershootingThreshold,
       shadow: shadow ?? this.shadow,
       axis: axis ?? this.axis,
     );

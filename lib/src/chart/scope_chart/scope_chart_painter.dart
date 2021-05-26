@@ -197,7 +197,9 @@ class ScopeChartPainter {
         if (verticalAxis.title.showTitle) {
           final title = verticalAxis.title;
           final span = TextSpan(
-            style: title.textStyle.copyWith(color: channel.color),
+            style: title.colorize
+                ? title.textStyle.copyWith(color: channel.color)
+                : title.textStyle,
             text: title.titleText,
           );
           final tp = TextPainter(
@@ -261,9 +263,9 @@ class ScopeChartPainter {
           }
           if (titles.showTitles != false) {
             final span = TextSpan(
-                style: titles
-                    .getTextStyles(verticalSeek)
-                    .copyWith(color: channel.color),
+                style: titles.colorize
+                    ? titles.textStyle.copyWith(color: channel.color)
+                    : titles.textStyle,
                 text: titles.getTitles(verticalSeek));
             final tp = TextPainter(
               text: span,
@@ -374,8 +376,7 @@ class ScopeChartPainter {
         }
         if (titles.showTitles) {
           final span = TextSpan(
-              style: titles.getTextStyles(horizontalSeek),
-              text: titles.getTitles(horizontalSeek));
+              style: titles.textStyle, text: titles.getTitles(horizontalSeek));
           final tp = TextPainter(
             text: span,
             textAlign: TextAlign.center,

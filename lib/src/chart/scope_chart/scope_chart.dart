@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:fimber/fimber.dart';
 import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/widgets.dart';
@@ -62,6 +61,8 @@ class ScopeChart extends StatefulWidget {
   final int timeWindow;
   final List<ScopeChartChannel> channels;
   final ScopeAxis? timeAxis;
+  final ScopeBorderData? borderData;
+  final ScopeLegendData? legendData;
   final bool stopped;
   final int channelAxisIndex;
   final Stream<bool> resetSync;
@@ -70,6 +71,8 @@ class ScopeChart extends StatefulWidget {
     this.timeWindow = 1000,
     this.channels = const [],
     this.timeAxis,
+    this.borderData,
+    this.legendData,
     this.stopped = false,
     this.channelAxisIndex = 0,
     this.resetSync = const Stream.empty(),
@@ -227,6 +230,8 @@ class _ScopeChartState extends State<ScopeChart>
             data: ScopeChartData(
               stopped: widget.stopped,
               activeChannel: activeChannel,
+              borderData: widget.borderData,
+              legendData: widget.legendData,
               timeAxis: _timeAxis.copyWith(
                 showAxis: widget.timeAxis?.showAxis,
                 interval: widget.timeAxis?.interval,
