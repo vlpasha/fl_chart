@@ -54,6 +54,8 @@ class ScopeChartChannel {
         valuesStream.listen((event) => _subscr!.pause(onValue(this, event)));
   }
 
+  void pause(Future<void> onPause) => _subscr?.pause(onPause);
+
   void cancel() => _subscr?.cancel();
 }
 
@@ -117,7 +119,7 @@ class _ScopeChartState extends State<ScopeChart>
     ScopeChartChannelValue event,
   ) {
     var _channel = _channels[channel.id];
-    if (_channel != null) {
+    if (_channel != null && widget.stopped != true) {
       if (_timeSync != true) {
         _startTimestamp = event.timestamp;
         _startTime = DateTime.now().millisecondsSinceEpoch;
@@ -215,8 +217,13 @@ class _ScopeChartState extends State<ScopeChart>
       animation: _animationController,
       builder: (_, __) {
         var now = 0;
-        if (_timeSync != false) {
+        if (widget.stopped != true) {
           _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
+        } else {
+          _timeSync = false;
+        }
+
+        if (_timeSync != false) {
           if (_elapsedTime < widget.timeWindow) {
             now = _startTimestamp;
           } else {
