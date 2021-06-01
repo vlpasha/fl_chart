@@ -196,8 +196,6 @@ class _ScopeChartState extends State<ScopeChart>
           _startTime = 0;
           _startTimestamp = 0;
           _elapsedTime = 0;
-          widget.channels
-              .forEach((channel) => channel.pause(_removeSpots(channel)));
         }));
   }
 
