@@ -121,7 +121,7 @@ class _ScopeChartState extends State<ScopeChart>
     var _channel = _channels[channel.id];
     if (_channel == null) {
       channel.cancel();
-    } else {
+    } else if (widget.stopped != true) {
       if (_timeSync != true || event.timestamp <= _startTimestamp) {
         _startTimestamp = event.timestamp;
         _startTime = DateTime.now().millisecondsSinceEpoch;
@@ -216,10 +216,12 @@ class _ScopeChartState extends State<ScopeChart>
           _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
         }
 
-        if (_elapsedTime < widget.timeWindow) {
-          now = _startTimestamp;
-        } else {
-          now = _startTimestamp + _elapsedTime - widget.timeWindow;
+        if (_timeSync != false) {
+          if (_elapsedTime < widget.timeWindow) {
+            now = _startTimestamp;
+          } else {
+            now = _startTimestamp + _elapsedTime - widget.timeWindow;
+          }
         }
         return CustomPaint(
           isComplex: true,
