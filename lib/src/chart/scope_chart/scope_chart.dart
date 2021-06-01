@@ -190,7 +190,7 @@ class _ScopeChartState extends State<ScopeChart>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
-    );
+    )..repeat();
     _resetSyncSubscr = widget.resetSync.listen((event) => setState(() {
           _timeSync = false;
           _startTime = 0;
@@ -212,11 +212,11 @@ class _ScopeChartState extends State<ScopeChart>
   @override
   Widget build(BuildContext context) {
     _updateChannels();
-    if (widget.stopped != false) {
-      _animationController.stop();
-    } else {
-      _animationController.repeat();
-    }
+    // if (widget.stopped != false) {
+    //   _animationController.stop();
+    // } else {
+    //   _animationController.repeat();
+    // }
 
     final activeChannel = _channels.values.isNotEmpty
         ? _channels.values.elementAt(widget.channelAxisIndex)
@@ -240,7 +240,6 @@ class _ScopeChartState extends State<ScopeChart>
         }
         return CustomPaint(
           isComplex: true,
-          willChange: widget.stopped != true,
           painter: RenderScopeChart(
             data: ScopeChartData(
               stopped: widget.stopped,
