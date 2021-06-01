@@ -150,6 +150,14 @@ class _ScopeChartState extends State<ScopeChart>
     return Future.value(null);
   }
 
+  Future<void> _removeSpots(ScopeChartChannel channel) {
+    var _channel = _channels[channel.id];
+    if (_channel != null) {
+      _channel.spots.clear();
+    }
+    return Future.value();
+  }
+
   void _updateChannels() {
     if (widget.channels.isEmpty) {
       _channels.clear();
@@ -188,6 +196,8 @@ class _ScopeChartState extends State<ScopeChart>
           _startTime = 0;
           _startTimestamp = 0;
           _elapsedTime = 0;
+          widget.channels
+              .forEach((channel) => channel.pause(_removeSpots(channel)));
         }));
   }
 
