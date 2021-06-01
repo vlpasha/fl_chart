@@ -119,16 +119,13 @@ class _ScopeChartState extends State<ScopeChart>
     ScopeChartChannelValue event,
   ) {
     var _channel = _channels[channel.id];
-    if (_channel != null && widget.stopped != true) {
-      if (_timeSync != true) {
+    if (_channel == null) {
+      channel.cancel();
+    } else {
+      if (_timeSync != true || event.timestamp <= _startTimestamp) {
         _startTimestamp = event.timestamp;
         _startTime = DateTime.now().millisecondsSinceEpoch;
         _timeSync = true;
-      }
-
-      if (event.timestamp <= _startTimestamp) {
-        _startTimestamp = event.timestamp;
-        _startTime = DateTime.now().millisecondsSinceEpoch;
       }
 
       _channel.spots
@@ -142,20 +139,10 @@ class _ScopeChartState extends State<ScopeChart>
 
       _channel.spots.add(FlSpot((event.timestamp).toDouble(), event.value));
       _channel.calculateMaxAxisValues();
-    } else {
-      channel.cancel();
     }
 
     if (widget.stopped != true) _channelsData.value = _channels.values;
     return Future.value(null);
-  }
-
-  Future<void> _removeSpots(ScopeChartChannel channel) {
-    var _channel = _channels[channel.id];
-    if (_channel != null) {
-      _channel.spots.clear();
-    }
-    return Future.value();
   }
 
   void _updateChannels() {
@@ -190,7 +177,7 @@ class _ScopeChartState extends State<ScopeChart>
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
-    )..repeat();
+    );
     _resetSyncSubscr = widget.resetSync.listen((event) => setState(() {
           _timeSync = false;
           _startTime = 0;
@@ -212,11 +199,11 @@ class _ScopeChartState extends State<ScopeChart>
   @override
   Widget build(BuildContext context) {
     _updateChannels();
-    // if (widget.stopped != false) {
-    //   _animationController.stop();
-    // } else {
-    //   _animationController.repeat();
-    // }
+    if (widget.stopped) {
+      _animationController.stop();
+    } else if (!_animationController.isAnimating) {
+      _animationController.repeat();
+    }
 
     final activeChannel = _channels.values.isNotEmpty
         ? _channels.values.elementAt(widget.channelAxisIndex)
@@ -227,16 +214,12 @@ class _ScopeChartState extends State<ScopeChart>
         var now = 0;
         if (widget.stopped != true) {
           _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
-        } else {
-          _timeSync = false;
         }
 
-        if (_timeSync != false) {
-          if (_elapsedTime < widget.timeWindow) {
-            now = _startTimestamp;
-          } else {
-            now = _startTimestamp + _elapsedTime - widget.timeWindow;
-          }
+        if (_elapsedTime < widget.timeWindow) {
+          now = _startTimestamp;
+        } else {
+          now = _startTimestamp + _elapsedTime - widget.timeWindow;
         }
         return CustomPaint(
           isComplex: true,
