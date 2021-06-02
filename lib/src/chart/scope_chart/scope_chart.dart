@@ -140,8 +140,6 @@ class _ScopeChartState extends State<ScopeChart>
       _channel.spots.add(FlSpot((event.timestamp).toDouble(), event.value));
       _channel.calculateMaxAxisValues();
     }
-
-    if (widget.stopped != true) _channelsData.value = _channels.values;
     return Future.value(null);
   }
 
@@ -167,7 +165,6 @@ class _ScopeChartState extends State<ScopeChart>
         channel.listen(_updateSpots);
       }
     }
-    _channelsData.value = _channels.values;
   }
 
   @override
@@ -184,6 +181,20 @@ class _ScopeChartState extends State<ScopeChart>
           _startTimestamp = 0;
           _elapsedTime = 0;
         }));
+  }
+
+  @override
+  void didUpdateWidget(ScopeChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.channels != widget.channels) {
+      for (final oldChannel in oldWidget.channels) {
+        oldChannel.cancel();
+      }
+
+      for (final newChannel in widget.channels) {
+        newChannel.listen(_updateSpots);
+      }
+    }
   }
 
   @override
@@ -205,15 +216,15 @@ class _ScopeChartState extends State<ScopeChart>
       _animationController.repeat();
     }
 
-    final activeChannel = _channels.values.isNotEmpty
-        ? _channels.values.elementAt(widget.channelAxisIndex)
-        : null;
+    final activeChannelId = widget.channels[widget.channelAxisIndex].id;
+    final activeChannel = _channels[activeChannelId];
     return AnimatedBuilder(
       animation: _animationController,
       builder: (_, __) {
         var now = 0;
         if (widget.stopped != true) {
           _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
+          _channelsData.value = _channels.values;
         }
 
         if (_timeSync != false) {
