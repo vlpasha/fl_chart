@@ -29,11 +29,8 @@ class ScopeChartChannel {
   final double width;
   final ScopeAxis axis;
   final Stream<ScopeChartChannelValue> valuesStream;
-  // final List<FlSpot> _spots = [];
 
   StreamSubscription<ScopeChartChannelValue>? _subscr;
-
-  // List<FlSpot> get spots => _spots;
 
   ScopeChartChannel({
     required this.id,
@@ -61,7 +58,7 @@ class ScopeChartChannel {
 
 class ScopeChart extends StatefulWidget {
   final int timeWindow;
-  final List<ScopeChartChannel> channels;
+  final Iterable<ScopeChartChannel> channels;
   final ScopeAxis? timeAxis;
   final ScopeBorderData? borderData;
   final ScopeLegendData? legendData;
@@ -216,8 +213,11 @@ class _ScopeChartState extends State<ScopeChart>
       _animationController.repeat();
     }
 
-    final activeChannelId = widget.channels[widget.channelAxisIndex].id;
-    final activeChannel = _channels[activeChannelId];
+    final activeChannelId = widget.channelAxisIndex < widget.channels.length
+        ? widget.channels.elementAt(widget.channelAxisIndex).id
+        : null;
+    final activeChannel =
+        activeChannelId != null ? _channels[activeChannelId] : null;
     return AnimatedBuilder(
       animation: _animationController,
       builder: (_, __) {
