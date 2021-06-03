@@ -63,8 +63,9 @@ class ScopeChart extends StatefulWidget {
   final ScopeBorderData? borderData;
   final ScopeLegendData? legendData;
   final bool stopped;
+  final bool reset;
   final int channelAxisIndex;
-  final Stream<bool> resetSync;
+  final Stream<bool>? resetSync;
   const ScopeChart({
     Key? key,
     this.timeWindow = 1000,
@@ -74,7 +75,8 @@ class ScopeChart extends StatefulWidget {
     this.legendData,
     this.stopped = false,
     this.channelAxisIndex = 0,
-    this.resetSync = const Stream.empty(),
+    this.reset = false,
+    this.resetSync,
   }) : super(key: key);
   @override
   State<ScopeChart> createState() => _ScopeChartState();
@@ -172,7 +174,7 @@ class _ScopeChartState extends State<ScopeChart>
       vsync: this,
       duration: const Duration(seconds: 1),
     );
-    _resetSyncSubscr = widget.resetSync.listen((event) => setState(() {
+    _resetSyncSubscr = widget.resetSync?.listen((event) => setState(() {
           _timeSync = false;
           _startTime = 0;
           _startTimestamp = 0;
@@ -191,6 +193,23 @@ class _ScopeChartState extends State<ScopeChart>
       for (final newChannel in widget.channels) {
         newChannel.listen(_updateSpots);
       }
+    }
+
+    if (oldWidget.resetSync != widget.resetSync) {
+      _resetSyncSubscr?.cancel();
+      _resetSyncSubscr = widget.resetSync?.listen((event) => setState(() {
+            _timeSync = false;
+            _startTime = 0;
+            _startTimestamp = 0;
+            _elapsedTime = 0;
+          }));
+    }
+
+    if (oldWidget.reset == false && widget.reset == true) {
+      _timeSync = false;
+      _startTime = 0;
+      _startTimestamp = 0;
+      _elapsedTime = 0;
     }
   }
 
