@@ -7,21 +7,11 @@ import 'scope_chart_data.dart';
 class ScopeChartHelper {
   ScopeChartHelper();
 
-  /// Contains List of cached results, base on [List<LineChartBarData>]
-  ///
-  /// We use it to prevent redundant calculations
-  static final Map<ScopeChannelData, ScopeChartMinMaxAxisValues>
-      _cachedResults = {};
-
   static ScopeChartMinMaxAxisValues calculateMaxAxisValues(
     ScopeChannelData lineBarsData,
   ) {
     if (lineBarsData.spots.isEmpty) {
       return ScopeChartMinMaxAxisValues(0, 0, 0, 0);
-    }
-
-    if (_cachedResults.containsKey(lineBarsData)) {
-      return _cachedResults[lineBarsData]!.copyWith(readFromCache: true);
     }
 
     var minX = lineBarsData.spots.first.x;
@@ -61,7 +51,6 @@ class ScopeChartHelper {
     }
 
     final result = ScopeChartMinMaxAxisValues(minX, maxX, minY, maxY);
-    _cachedResults[lineBarsData] = result;
     return result;
   }
 }

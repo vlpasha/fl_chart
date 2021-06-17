@@ -171,12 +171,13 @@ class _ScopeChartState extends State<ScopeChart>
       }
 
       if (_channel.spots.isNotEmpty &&
-          (_channel.spots.last.x - _channel.spots.first.x) >
-              widget.timeWindow) {
+          ((_channel.spots.last.x - _channel.spots.first.x) >
+              widget.timeWindow)) {
         _channel.spots.removeFirst();
       }
 
       _channel.spots.addLast(FlSpot((event.timestamp).toDouble(), event.value));
+
       _channel.calculateMaxAxisValues();
     }
 
@@ -248,37 +249,33 @@ class _ScopeChartState extends State<ScopeChart>
   @override
   void didUpdateWidget(ScopeChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.channels != widget.channels) {
-      for (final oldChannel in oldWidget.channels) {
-        if (oldChannel is ScopeChartDynamicChannel) {
-          oldChannel.cancel();
-        }
-      }
-
-      if (widget.realTime) {
-        for (final newChannel in widget.channels) {
-          if (newChannel is! ScopeChartDynamicChannel) {
-            throw Exception(
-                'Static channels not allowed when scope is in real time mode');
-          }
-          newChannel.listen(_onData);
-        }
+    for (final oldChannel in oldWidget.channels) {
+      if (oldChannel is ScopeChartDynamicChannel) {
+        oldChannel.cancel();
       }
     }
 
-    if (oldWidget.resetStream != widget.resetStream) {
-      _resetSyncSubscr?.cancel();
-      _resetSyncSubscr = widget.resetStream?.listen(
-        (event) => setState(
-          () {
-            _timeSync = false;
-            _startTime = 0;
-            _startTimestamp = 0;
-            _elapsedTime = 0;
-          },
-        ),
-      );
+    if (widget.realTime) {
+      for (final newChannel in widget.channels) {
+        if (newChannel is! ScopeChartDynamicChannel) {
+          throw Exception(
+              'Static channels not allowed when scope is in real time mode');
+        }
+        newChannel.listen(_onData);
+      }
     }
+
+    _resetSyncSubscr?.cancel();
+    _resetSyncSubscr = widget.resetStream?.listen(
+      (event) => setState(
+        () {
+          _timeSync = false;
+          _startTime = 0;
+          _startTimestamp = 0;
+          _elapsedTime = 0;
+        },
+      ),
+    );
 
     if (oldWidget.reset == false && widget.reset == true) {
       _timeSync = false;
@@ -295,7 +292,7 @@ class _ScopeChartState extends State<ScopeChart>
         channel.cancel();
       }
     }
-    _animationController.stop();
+    _animationController.dispose();
     _resetSyncSubscr?.cancel();
     super.dispose();
   }

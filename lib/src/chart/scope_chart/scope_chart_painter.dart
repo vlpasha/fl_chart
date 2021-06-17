@@ -103,7 +103,7 @@ class ScopeChartPainter {
   }
 
   Rect _getClipRect(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
-    final data = holder.data;
+    ScopeChartData data = holder.data;
     final size = canvasWrapper.size;
     final clip = data.clipData;
     final usableSize = _getChartUsableDrawSize(size, holder);
@@ -135,11 +135,16 @@ class ScopeChartPainter {
     return Rect.fromLTRB(left, top, right, bottom);
   }
 
+  void _drawZoomArea(
+    CanvasWrapper canvasWrapper,
+    ScopePaintHolder holder,
+  ) {}
+
   void _drawBackground(
     CanvasWrapper canvasWrapper,
     ScopePaintHolder holder,
   ) {
-    final data = holder.data;
+    ScopeChartData data = holder.data;
     if (data.backgroundColor.opacity == 0.0) {
       return;
     }
@@ -162,7 +167,7 @@ class ScopeChartPainter {
     CanvasWrapper canvasWrapper,
     ScopePaintHolder holder,
   ) {
-    var data = holder.data;
+    ScopeChartData data = holder.data;
     var borderData = data.borderData;
     if (borderData.showBorder != true) {
       return;
@@ -223,7 +228,7 @@ class ScopeChartPainter {
   }
 
   void _drawAxes(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
-    final data = holder.data;
+    ScopeChartData data = holder.data;
     final viewSize = _getChartUsableDrawSize(canvasWrapper.size, holder);
 
     // Vertical Axis
