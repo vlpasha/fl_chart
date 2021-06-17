@@ -34,7 +34,7 @@ class RenderScopeChart extends CustomPainter {
     required double textScale,
   })  : _data = data,
         _textScale = textScale,
-        super(repaint: data.channelsData);
+        super();
 
   final _painter = ScopeChartPainter();
 
@@ -42,13 +42,49 @@ class RenderScopeChart extends CustomPainter {
 
   @override
   bool shouldRepaint(RenderScopeChart oldDelegate) =>
-      oldDelegate._data != this._data;
+      oldDelegate._data != _data;
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.translate(0, 0);
     _painter.paint(CanvasWrapper(canvas, size), paintHolder);
+    canvas.restore();
+  }
+}
+
+class RenderScopeLegend extends CustomPainter {
+  final ScopeLegendData _data;
+  final Iterable<ScopeChannelData> _channels;
+  final double _textScale;
+
+  RenderScopeLegend({
+    required ScopeLegendData data,
+    required double textScale,
+    required Iterable<ScopeChannelData> channels,
+  })  : _data = data,
+        _textScale = textScale,
+        _channels = channels,
+        super();
+
+  final _painter = ScopeChartLegendPainter();
+
+  @override
+  bool shouldRepaint(RenderScopeLegend oldDelegate) =>
+      oldDelegate._data != _data;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.translate(0, 0);
+    _painter.paint(
+      CanvasWrapper(canvas, size),
+      legend: _data,
+      channels: _channels
+          .where((e) => e.show)
+          .map((e) => ScopeLegendChannel.fromChannel(e)),
+      textScale: _textScale,
+    );
     canvas.restore();
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
@@ -260,6 +261,25 @@ class ScopeAxis {
       );
 }
 
+class ScopeLegendChannel with EquatableMixin {
+  final String title;
+  final Color color;
+  ScopeLegendChannel({
+    required this.title,
+    required this.color,
+  });
+
+  factory ScopeLegendChannel.fromChannel(ScopeChannelData channel) =>
+      ScopeLegendChannel(
+          color: channel.color, title: channel.axis.title.titleText);
+
+  @override
+  List<Object?> get props => [
+        title,
+        color,
+      ];
+}
+
 class ScopeLegendData with EquatableMixin {
   final bool showLegend;
   final double width;
@@ -267,7 +287,7 @@ class ScopeLegendData with EquatableMixin {
   final double size;
   final TextStyle textStyle;
 
-  const ScopeLegendData({
+  ScopeLegendData({
     this.showLegend = true,
     this.width = 2.0,
     this.offset = const Offset(10.0, 10.0),
@@ -308,17 +328,19 @@ class ScopeLegendData with EquatableMixin {
   @override
   List<Object?> get props => [
         showLegend,
+        width,
+        offset,
+        size,
         textStyle,
       ];
 }
 
 class ScopeChartData with EquatableMixin {
-  final ValueNotifier<Iterable<ScopeChannelData>> channelsData;
+  final Iterable<ScopeChannelData> channelsData;
   final ScopeAxis timeAxis;
   final ScopeBorderData borderData;
   final FlClipData clipData;
   final Color backgroundColor;
-  final ScopeLegendData legendData;
   final ScopeChannelData? activeChannel;
   final bool stopped;
 
@@ -330,17 +352,15 @@ class ScopeChartData with EquatableMixin {
     this.stopped = false,
     this.timeAxis = const ScopeAxis(min: 0, max: 5000),
     this.activeChannel,
-    ScopeLegendData? legendData,
     ScopeBorderData? borderData,
     FlClipData? clipData,
     Color? backgroundColor,
   })  : borderData = borderData ?? ScopeBorderData(),
         backgroundColor = backgroundColor ?? Colors.transparent,
-        clipData = clipData ?? FlClipData.none(),
-        legendData = legendData ?? const ScopeLegendData();
+        clipData = clipData ?? FlClipData.none();
 
   ScopeChartData copyWith({
-    ValueNotifier<Iterable<ScopeChannelData>>? channels,
+    Iterable<ScopeChannelData>? channels,
     ScopeAxis? timeAxis,
     ScopeBorderData? borderData,
     double? minX,
@@ -380,9 +400,9 @@ class ScopeChannelData with EquatableMixin {
   final double preventCurveOvershootingThreshold;
   final Shadow shadow;
   final ScopeAxis axis;
-  final List<FlSpot> _spots;
+  final ListQueue<FlSpot> _spots;
 
-  List<FlSpot> get spots => _spots;
+  ListQueue<FlSpot> get spots => _spots;
   late ScopeChartMinMaxAxisValues _dynamicLimits;
   double get minY => axis.min ?? _dynamicLimits.minY;
   double get maxY => axis.max ?? _dynamicLimits.maxY;
@@ -398,8 +418,8 @@ class ScopeChannelData with EquatableMixin {
     this.preventCurveOvershootingThreshold = 10.0,
     this.shadow = const Shadow(color: Colors.transparent),
     this.axis = const ScopeAxis(),
-    List<FlSpot>? spots,
-  }) : _spots = spots ?? const [] {
+    ListQueue<FlSpot>? spots,
+  }) : _spots = spots ?? ListQueue() {
     calculateMaxAxisValues();
   }
 
@@ -410,7 +430,7 @@ class ScopeChannelData with EquatableMixin {
   /// and replaces provided values.
   ScopeChannelData copyWith({
     String? id,
-    List<FlSpot>? spots,
+    ListQueue<FlSpot>? spots,
     bool? show,
     Color? color,
     double? width,
@@ -450,27 +470,5 @@ class ScopeChannelData with EquatableMixin {
         preventCurveOvershootingThreshold,
         shadow,
         axis,
-      ];
-}
-
-/// Represent a targeted spot inside a line bar.
-class ScopeChannelSpot extends FlSpot with EquatableMixin {
-  final ScopeChannelData bar;
-  final int barIndex;
-  final int spotIndex;
-  ScopeChannelSpot(
-    this.bar,
-    this.barIndex,
-    FlSpot spot,
-  )   : spotIndex = bar.spots.indexOf(spot),
-        super(spot.x, spot.y);
-
-  @override
-  List<Object?> get props => [
-        bar,
-        barIndex,
-        spotIndex,
-        x,
-        y,
       ];
 }

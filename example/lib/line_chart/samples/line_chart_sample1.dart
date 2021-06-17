@@ -167,16 +167,19 @@ class LineChartSample1 extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
-        children: [Expanded(child: ScopeChartSample()), Expanded(child: LineChartSample())],
+        children: [
+          Expanded(child: DynamicScopeSample()),
+          Expanded(child: StaticScopeSample())
+        ],
       );
 }
 
-class ScopeChartSample extends StatefulWidget {
+class DynamicScopeSample extends StatefulWidget {
   @override
-  _ScopeChartSampleState createState() => _ScopeChartSampleState();
+  _DynamicScopeSampleState createState() => _DynamicScopeSampleState();
 }
 
-class _ScopeChartSampleState extends State<ScopeChartSample> {
+class _DynamicScopeSampleState extends State<DynamicScopeSample> {
   var rnd = Random();
   int timeStep = 30;
   double radians = 0.0;
@@ -196,7 +199,7 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
   @override
   void initState() {
     _channels = [
-      ScopeChartChannel(
+      ScopeChartDynamicChannel(
         id: '0',
         show: true,
         color: Colors.red,
@@ -206,7 +209,7 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
       ),
-      ScopeChartChannel(
+      ScopeChartDynamicChannel(
         id: '1',
         show: true,
         color: Colors.green,
@@ -216,7 +219,7 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
       ),
-      ScopeChartChannel(
+      ScopeChartDynamicChannel(
         id: '2',
         show: true,
         color: Colors.blue,
@@ -226,7 +229,7 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
       ),
-      ScopeChartChannel(
+      ScopeChartDynamicChannel(
         id: '3',
         show: true,
         color: Colors.blue,
@@ -277,41 +280,58 @@ class _ScopeChartSampleState extends State<ScopeChartSample> {
           setState(() => stop = !stop);
         },
         onTap: () {
-          setState(() => axisIndex < (_channels.length - 1) ? axisIndex++ : axisIndex = 0);
+          setState(() =>
+              axisIndex < (_channels.length - 1) ? axisIndex++ : axisIndex = 0);
         },
         child: ScopeChart(
           timeWindow: const Duration(seconds: 5).inMilliseconds,
           channels: _channels,
           channelAxisIndex: axisIndex,
           stopped: stop,
+          legendData:
+              ScopeLegendData(showLegend: true, offset: Offset(100, 10)),
           // timeAxis: const ScopeAxis(),
         ));
   }
 }
 
-class LineChartSample extends StatefulWidget {
-  LineChartSample({Key key}) : super(key: key);
+class StaticScopeSample extends StatefulWidget {
+  StaticScopeSample({Key key}) : super(key: key);
   @override
-  State<StatefulWidget> createState() => _LineChartSampleState();
+  State<StatefulWidget> createState() => _StaticScopeSampleState();
 }
 
-class _LineChartSampleState extends State<LineChartSample> {
-  List<FlSpot> _cos(int cunt, double phase) {
+class _StaticScopeSampleState extends State<StaticScopeSample> {
+  double _min = 0;
+  double _max = 1000000;
+  double _timeWindow = 10000;
+  double _prevTimeWindow;
+  double _current = 0;
+  int axisIndex = 0;
+  List<ScopeChartStaticChannel> _channels;
+
+  List<ScopeChartChannelValue> _cos(int count, double phase) {
     var radians = 0.0;
-    var values = <FlSpot>[];
-    for (var i = 0; i < cunt; i++) {
-      values.add(FlSpot(i.toDouble(), cos(radians * pi + phase)));
+    var values = <ScopeChartChannelValue>[];
+    for (var i = 0; i < count; i++) {
+      values.add(ScopeChartChannelValue(
+        timestamp: Duration(seconds: i).inMilliseconds,
+        value: cos(radians * pi + phase),
+      ));
       radians += 0.05;
       if (radians > 2.0) radians = 0;
     }
     return values;
   }
 
-  List<FlSpot> _sin(int cunt, double phase) {
+  List<ScopeChartChannelValue> _sin(int count, double phase) {
     var radians = 0.0;
-    var values = <FlSpot>[];
-    for (var i = 0; i < cunt; i++) {
-      values.add(FlSpot(i.toDouble(), sin(radians * pi + phase)));
+    var values = <ScopeChartChannelValue>[];
+    for (var i = 0; i < count; i++) {
+      values.add(ScopeChartChannelValue(
+        timestamp: Duration(seconds: i).inMilliseconds,
+        value: sin(radians * pi + phase),
+      ));
       radians += 0.05;
       if (radians > 2.0) radians = 0;
     }
@@ -319,43 +339,60 @@ class _LineChartSampleState extends State<LineChartSample> {
   }
 
   @override
-  Widget build(context) => LineChart(LineChartData(
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: true,
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: SideTitles(
-            showTitles: true,
-            getTitles: (value) => value.toStringAsFixed(0),
-          ),
-          leftTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 50,
-            getTitles: (value) => value.toStringAsFixed(0),
-          ),
-        ),
-        lineTouchData: LineTouchData(enabled: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: [..._cos(100, 0), FlSpot.nullSpot, ..._cos(100, 1)],
-            isCurved: false,
-            isStepLineChart: false,
-            colors: [Colors.red],
-            barWidth: 2,
-            isStrokeCapRound: false,
-            dotData: FlDotData(show: false),
-          ),
-          LineChartBarData(
-            spots: [..._sin(100, 0)],
-            isCurved: false,
-            isStepLineChart: false,
-            colors: [Colors.green],
-            barWidth: 2,
-            isStrokeCapRound: false,
-            dotData: FlDotData(show: false),
-          ),
-        ],
+  void initState() {
+    super.initState();
+    _channels = [
+      ScopeChartStaticChannel(
+          id: 'sin', color: Colors.red, values: _sin(10000, 0)),
+      ScopeChartStaticChannel(
+          id: 'cos', color: Colors.green, values: _cos(10000, 0)),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+      onTap: () => setState(() =>
+          axisIndex < (_channels.length - 1) ? axisIndex++ : axisIndex = 0),
+      onHorizontalDragUpdate: (details) {
+        var _newPos = _current - details.primaryDelta * 100;
+        if (_newPos < _min) {
+          _newPos = _min;
+        }
+        if ((_newPos + _timeWindow) > _max) {
+          _newPos = _max - _timeWindow;
+        }
+        setState(() => _current = _newPos);
+      },
+      onScaleStart: (_) => setState(() => _prevTimeWindow = _timeWindow),
+      onScaleUpdate: (details) {
+        var _newTimeWindow = _prevTimeWindow / details.scale;
+        setState(() {
+          print(_newTimeWindow);
+          if (_newTimeWindow > _timeWindow) {
+            _timeWindow += _newTimeWindow / 50;
+            _current -= _newTimeWindow / 100;
+          } else {
+            _timeWindow -= _newTimeWindow / 50;
+            _current += _newTimeWindow / 100;
+          }
+
+          if (_current < _min) {
+            _current = _min;
+          }
+
+          if (_current > _max) {
+            _current = _max;
+          }
+
+          if (_current + _timeWindow > _max) {
+            _timeWindow = _max - _current;
+          }
+        });
+      },
+      child: ScopeChart(
+        channels: _channels,
+        timeAxis: ScopeAxis(min: _current, max: _current + _timeWindow),
+        channelAxisIndex: axisIndex,
+        realTime: false,
       ));
 }

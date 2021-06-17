@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -12,9 +13,49 @@ import '../base/axis_chart/axis_chart_data.dart';
 import 'scope_chart_data.dart';
 
 class ScopePaintHolder {
-  final ScopeChartData data;
+  final dynamic data;
   final double textScale;
   ScopePaintHolder(this.data, this.textScale);
+}
+
+class ScopeChartLegendPainter {
+  late Paint _legendPaint;
+
+  ScopeChartLegendPainter() : super() {
+    _legendPaint = Paint()..style = PaintingStyle.stroke;
+  }
+
+  void paint(
+    CanvasWrapper canvasWrapper, {
+    required ScopeLegendData legend,
+    required Iterable<ScopeLegendChannel> channels,
+    double textScale = 1.0,
+  }) {
+    if (legend.showLegend != false) {
+      var bothY = legend.offset.dy;
+      for (var channel in channels) {
+        final span = TextSpan(style: legend.textStyle, text: channel.title);
+        final tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr,
+          textScaleFactor: textScale,
+        );
+        tp.layout();
+        final x1 = legend.offset.dx;
+        final x2 = x1 + legend.size;
+        var y = bothY;
+        _legendPaint.color = channel.color;
+        _legendPaint.strokeWidth = legend.width;
+        canvasWrapper.save();
+        canvasWrapper.drawLine(Offset(x1, y), Offset(x2, y), _legendPaint);
+        y = bothY - (tp.height / 2) - (legend.width / 2);
+        canvasWrapper.drawText(tp, Offset(x2 + 5, y));
+        canvasWrapper.restore();
+        bothY += tp.height;
+      }
+    }
+  }
 }
 
 class ScopeChartPainter {
@@ -22,53 +63,52 @@ class ScopeChartPainter {
   late Paint _backgroundPaint;
   late Paint _axesPaint;
   late Paint _barPaint;
-  late Paint _legendPaint;
 
   ScopeChartPainter() : super() {
     _borderPaint = Paint()..style = PaintingStyle.stroke;
     _backgroundPaint = Paint()..style = PaintingStyle.fill;
     _axesPaint = Paint()..style = PaintingStyle.stroke;
     _barPaint = Paint()..style = PaintingStyle.stroke;
-    _legendPaint = Paint()..style = PaintingStyle.stroke;
   }
 
   void paint(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
-    final data = holder.data;
-    if (data.clipData.any) {
-      canvasWrapper.saveLayer(
-        Rect.fromLTWH(
-          0,
-          -40,
-          canvasWrapper.size.width + 40,
-          canvasWrapper.size.height + 40,
-        ),
-        Paint(),
-      );
+    ScopeChartData data = holder.data;
 
-      _clipToBorder(canvasWrapper, holder);
+    // if (data.clipData.any) {
+    //   canvasWrapper.saveLayer(
+    //     Rect.fromLTWH(
+    //       0,
+    //       -40,
+    //       canvasWrapper.size.width + 40,
+    //       canvasWrapper.size.height + 40,
+    //     ),
+    //     Paint(),
+    //   );
+
+    //   _clipToBorder(canvasWrapper, holder);
+    // }
+
+    for (final channelData in data.channelsData) {
+      if (!channelData.show || channelData.spots.isEmpty) continue;
+      _drawChannel(canvasWrapper, data, channelData, holder);
     }
 
-    for (final barData in data.channelsData.value) {
-      if (!barData.show) continue;
-      _drawBarLine(canvasWrapper, data, barData, holder);
-    }
-
-    if (data.clipData.any) {
-      canvasWrapper.restore();
-    }
+    // if (data.clipData.any) {
+    //   canvasWrapper.restore();
+    // }
 
     _drawBackground(canvasWrapper, holder);
     _drawViewBorder(canvasWrapper, holder);
     _drawAxes(canvasWrapper, holder);
-    _drawLegend(canvasWrapper, holder);
   }
 
-  void _clipToBorder(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
+  Rect _getClipRect(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
     final data = holder.data;
     final size = canvasWrapper.size;
     final clip = data.clipData;
     final usableSize = _getChartUsableDrawSize(size, holder);
     final border = data.borderData.showBorder ? data.borderData.border : null;
+    final _leftOffset = _getLeftOffsetDrawSize(holder);
 
     var left = 0.0;
     var top = 0.0;
@@ -77,7 +117,7 @@ class ScopeChartPainter {
 
     if (clip.left) {
       final borderWidth = border?.left.width ?? 0;
-      left = _getLeftOffsetDrawSize(holder) - (borderWidth / 2);
+      left = _leftOffset - (borderWidth / 2);
     }
     if (clip.top) {
       final borderWidth = border?.top.width ?? 0;
@@ -85,15 +125,14 @@ class ScopeChartPainter {
     }
     if (clip.right) {
       final borderWidth = border?.right.width ?? 0;
-      right = _getLeftOffsetDrawSize(holder);
-      right += usableSize.width + (borderWidth / 2);
+      right = _leftOffset + usableSize.width + (borderWidth / 2);
     }
     if (clip.bottom) {
       final borderWidth = border?.bottom.width ?? 0;
       bottom = usableSize.height + (borderWidth / 2);
     }
 
-    canvasWrapper.clipRect(Rect.fromLTRB(left, top, right, bottom));
+    return Rect.fromLTRB(left, top, right, bottom);
   }
 
   void _drawBackground(
@@ -192,7 +231,7 @@ class ScopeChartPainter {
     if (data.activeChannel != null) {
       var channel = data.activeChannel!;
       var verticalAxis = channel.axis;
-      if (verticalAxis.showAxis != false) {
+      if (verticalAxis.showAxis != false && channel.spots.isNotEmpty) {
         // draw axis title
         if (verticalAxis.title.showTitle) {
           final title = verticalAxis.title;
@@ -412,188 +451,162 @@ class ScopeChartPainter {
     }
   }
 
-  void _drawLegend(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
-    final viewSize = canvasWrapper.size;
-    final data = holder.data;
-    if (data.legendData.showLegend != false) {
-      final legend = data.legendData;
-      var bothY = legend.offset.dy;
-      for (var channel in data.channelsData.value
-          .where((element) => element.show != false)) {
-        final span = TextSpan(
-            style: legend.textStyle, text: channel.axis.title.titleText);
-        final tp = TextPainter(
-          text: span,
-          textAlign: TextAlign.left,
-          textDirection: TextDirection.ltr,
-          textScaleFactor: holder.textScale,
-        );
-        tp.layout();
-        final x1 = _getLeftOffsetDrawSize(holder) + legend.offset.dx;
-        final x2 = x1 + legend.size;
-        final x3 = x2 + tp.height / 2;
-        var y = bothY;
-        _legendPaint.color = channel.color;
-        _legendPaint.strokeWidth = legend.width;
-        canvasWrapper.save();
-        canvasWrapper.drawLine(Offset(x1, y), Offset(x2, y), _legendPaint);
-        y = bothY - (tp.height / 2) - (legend.width / 2);
-        canvasWrapper.drawText(tp, Offset(x2 + 5, y));
-        canvasWrapper.restore();
-        bothY += tp.height;
-      }
-    }
-  }
-
-  void _drawBarLine(
+  void _drawChannel(
     CanvasWrapper canvasWrapper,
     ScopeChartData chartData,
-    ScopeChannelData barData,
+    ScopeChannelData channelData,
     ScopePaintHolder holder,
   ) {
-    final viewSize = canvasWrapper.size;
-    final barList = <List<FlSpot>>[[]];
-
-    for (var spot in barData.spots) {
-      if (spot.isNotNull()) {
-        barList.last.add(spot);
-      } else if (barList.last.isNotEmpty) {
-        barList.add([]);
-      }
-    }
-
-    if (barList.last.isEmpty) {
-      barList.removeLast();
-    }
-
-    for (var bar in barList) {
-      final barPath = _generateBarPath(
-        viewSize,
-        chartData,
-        barData,
-        bar,
-        holder,
-      );
-      _drawBar(canvasWrapper, barPath, barData, holder);
-    }
+    // final path = _generatePath(viewSize, chartData, channelData, holder);
+    final path =
+        _generateStepPath(canvasWrapper, chartData, channelData, holder);
+    _drawPath(canvasWrapper, path, channelData, holder);
   }
 
-  Path _generateBarPath(
+  Path _generateStepPath(
+    CanvasWrapper canvasWrapper,
+    ScopeChartData scopeData,
+    ScopeChannelData channelData,
+    ScopePaintHolder holder, {
+    Path? appendToPath,
+  }) {
+    final clipRect = _getClipRect(canvasWrapper, holder);
+    final path = appendToPath ?? Path();
+    final spots = channelData.spots;
+
+    var start = _clipXY(
+        clipRect,
+        _getPixelX(
+          spots.first.x,
+          scopeData.minX,
+          scopeData.maxX,
+          clipRect.size,
+          holder,
+        ),
+        _getPixelY(
+          spots.first.y,
+          channelData.minY,
+          channelData.maxY,
+          clipRect.size,
+          holder,
+        ));
+
+    if (appendToPath == null) {
+      path.moveTo(start.dx, start.dy);
+    } else {
+      path.lineTo(start.dx, start.dy);
+    }
+
+    final iterator = spots.iterator;
+    var curSpot = iterator.moveNext() ? iterator.current : null;
+    var nextSpot = iterator.moveNext() ? iterator.current : curSpot;
+    while (curSpot != null && nextSpot != null) {
+      /// CurrentSpot
+      final current = _clipXY(
+        clipRect,
+        _getPixelX(
+          curSpot.x,
+          scopeData.minX,
+          scopeData.maxX,
+          clipRect.size,
+          holder,
+        ),
+        _getPixelY(
+          curSpot.y,
+          channelData.minY,
+          channelData.maxY,
+          clipRect.size,
+          holder,
+        ),
+      );
+
+      final next = _clipXY(
+        clipRect,
+        _getPixelX(
+          nextSpot.x,
+          scopeData.minX,
+          scopeData.maxX,
+          clipRect.size,
+          holder,
+        ),
+        _getPixelY(
+          nextSpot.y,
+          channelData.minY,
+          channelData.maxY,
+          clipRect.size,
+          holder,
+        ),
+      );
+
+      if (current.dy == next.dy) {
+        path.lineTo(next.dx, next.dy);
+      } else {
+        path.lineTo(next.dx, current.dy);
+        path.lineTo(next.dx, next.dy);
+      }
+
+      curSpot = nextSpot;
+      nextSpot = iterator.moveNext() ? iterator.current : null;
+    }
+
+    return path;
+  }
+
+  Path _generatePath(
     Size viewSize,
     ScopeChartData scopeData,
-    ScopeChannelData barData,
-    List<FlSpot> barSpots,
+    ScopeChannelData channelData,
     ScopePaintHolder holder, {
     Path? appendToPath,
   }) {
     viewSize = _getChartUsableDrawSize(viewSize, holder);
     final path = appendToPath ?? Path();
-    final size = barSpots.length;
-    var temp = const Offset(0.0, 0.0);
+    final spots = channelData.spots;
 
-    final x = _getPixelX(
-      barSpots[0].x,
+    var x = _getPixelX(
+      spots.first.x,
       scopeData.minX,
       scopeData.maxX,
       viewSize,
       holder,
     );
-    final y = _getPixelY(
-      barSpots[0].y,
-      barData.minY,
-      barData.maxY,
+    var y = _getPixelY(
+      spots.first.y,
+      channelData.minY,
+      channelData.maxY,
       viewSize,
       holder,
     );
+
     if (appendToPath == null) {
       path.moveTo(x, y);
     } else {
       path.lineTo(x, y);
     }
-    for (var i = 1; i < size; i++) {
+
+    final iterator = spots.iterator;
+    while (iterator.moveNext()) {
+      final curSpot = iterator.current;
+
       /// CurrentSpot
       final current = Offset(
         _getPixelX(
-          barSpots[i].x,
+          curSpot.x,
           scopeData.minX,
           scopeData.maxX,
           viewSize,
           holder,
         ),
         _getPixelY(
-          barSpots[i].y,
-          barData.minY,
-          barData.maxY,
+          curSpot.y,
+          channelData.minY,
+          channelData.maxY,
           viewSize,
           holder,
         ),
       );
 
-      /// previous spot
-      final previous = Offset(
-        _getPixelX(
-          barSpots[i - 1].x,
-          scopeData.minX,
-          scopeData.maxX,
-          viewSize,
-          holder,
-        ),
-        _getPixelY(
-          barSpots[i - 1].y,
-          barData.minY,
-          barData.maxY,
-          viewSize,
-          holder,
-        ),
-      );
-
-      /// next point
-      final next = Offset(
-        _getPixelX(
-          barSpots[i + 1 < size ? i + 1 : i].x,
-          scopeData.minX,
-          scopeData.maxX,
-          viewSize,
-          holder,
-        ),
-        _getPixelY(
-          barSpots[i + 1 < size ? i + 1 : i].y,
-          barData.minY,
-          barData.maxY,
-          viewSize,
-          holder,
-        ),
-      );
-
-      final controlPoint1 = previous + temp;
-
-      /// if the isCurved is false, we set 0 for smoothness,
-      /// it means we should not have any smoothness then we face with
-      /// the sharped corners line
-      final smoothness = barData.isCurved ? barData.curveSmoothness : 0.0;
-      temp = ((next - previous) / 2) * smoothness;
-
-      if (barData.preventCurveOverShooting) {
-        if ((next - current).dy <= barData.preventCurveOvershootingThreshold ||
-            (current - previous).dy <=
-                barData.preventCurveOvershootingThreshold) {
-          temp = Offset(temp.dx, 0);
-        }
-
-        if ((next - current).dx <= barData.preventCurveOvershootingThreshold ||
-            (current - previous).dx <=
-                barData.preventCurveOvershootingThreshold) {
-          temp = Offset(0, temp.dy);
-        }
-      }
-
-      final controlPoint2 = current - temp;
-
-      path.cubicTo(
-        controlPoint1.dx,
-        controlPoint1.dy,
-        controlPoint2.dx,
-        controlPoint2.dy,
+      path.lineTo(
         current.dx,
         current.dy,
       );
@@ -607,7 +620,7 @@ class ScopeChartPainter {
   }
 
   /// draw the main bar line by the [barPath]
-  void _drawBar(
+  void _drawPath(
     CanvasWrapper canvasWrapper,
     Path barPath,
     ScopeChannelData barData,
@@ -701,11 +714,12 @@ class ScopeChartPainter {
     ScopePaintHolder holder,
   ) {
     final deltaX = maxX - minX;
+    final leftOffset = _getLeftOffsetDrawSize(holder);
     if (deltaX == 0.0) {
-      return _getLeftOffsetDrawSize(holder);
+      return leftOffset.roundToDouble();
     }
-    return (((spotX - minX) / deltaX) * chartUsableSize.width) +
-        _getLeftOffsetDrawSize(holder);
+    final x = (((spotX - minX) / deltaX) * chartUsableSize.width) + leftOffset;
+    return x.roundToDouble();
   }
 
   /// With this function we can convert our [FlSpot] y
@@ -719,12 +733,12 @@ class ScopeChartPainter {
   ) {
     final deltaY = maxY - minY;
     if (deltaY == 0.0) {
-      return chartUsableSize.height;
+      return chartUsableSize.height.roundToDouble();
     }
 
     var y = ((spotY - minY) / deltaY) * chartUsableSize.height;
     y = chartUsableSize.height - y;
-    return y;
+    return y.roundToDouble();
   }
 
   bool _checkToShowTitle(
@@ -738,5 +752,20 @@ class ScopeChartPainter {
       return true;
     }
     return value > minValue && value < maxValue;
+  }
+
+  Offset _clipXY(Rect clipRect, double x, double y) {
+    if (x < clipRect.left) {
+      x = clipRect.left;
+    } else if (x > clipRect.right) {
+      x = clipRect.right;
+    }
+
+    if (y < clipRect.top) {
+      y = clipRect.top;
+    } else if (y > clipRect.bottom) {
+      y = clipRect.bottom;
+    }
+    return Offset(x, y);
   }
 }

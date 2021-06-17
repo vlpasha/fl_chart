@@ -5,10 +5,13 @@ import 'scope_chart_data.dart';
 
 /// Contains anything that helps LineChart works
 class ScopeChartHelper {
+  ScopeChartHelper();
+
   /// Contains List of cached results, base on [List<LineChartBarData>]
   ///
   /// We use it to prevent redundant calculations
-  static final Map<ScopeChannelData, ScopeChartMinMaxAxisValues> _cachedResults = {};
+  static final Map<ScopeChannelData, ScopeChartMinMaxAxisValues>
+      _cachedResults = {};
 
   static ScopeChartMinMaxAxisValues calculateMaxAxisValues(
     ScopeChannelData lineBarsData,
@@ -21,14 +24,13 @@ class ScopeChartHelper {
       return _cachedResults[lineBarsData]!.copyWith(readFromCache: true);
     }
 
-    var minX = lineBarsData.spots[0].x;
-    var maxX = lineBarsData.spots[0].x;
-    var minY = lineBarsData.spots[0].y;
-    var maxY = lineBarsData.spots[0].y;
+    var minX = lineBarsData.spots.first.x;
+    var maxX = lineBarsData.spots.first.x;
+    var minY = lineBarsData.spots.first.y;
+    var maxY = lineBarsData.spots.first.y;
 
     final barData = lineBarsData;
-    for (var j = 0; j < barData.spots.length; j++) {
-      final spot = barData.spots[j];
+    for (final spot in barData.spots) {
       if (spot.isNotNull()) {
         if (spot.x > maxX) {
           maxX = spot.x;
