@@ -335,6 +335,40 @@ class ScopeLegendData with EquatableMixin {
       ];
 }
 
+class ScopeZoomArea with EquatableMixin {
+  final bool show;
+  final double min;
+  final double max;
+  final double zoomStart;
+  final double zoomEnd;
+  final Color backgroundColor;
+  final Color areaColor;
+  final double height;
+
+  ScopeZoomArea({
+    this.show = false,
+    required this.min,
+    required this.max,
+    double? zoomStart,
+    double? zoomEnd,
+    this.backgroundColor = Colors.transparent,
+    this.areaColor = Colors.lightBlue,
+    this.height = 40.0,
+  })  : zoomStart = zoomStart ?? min,
+        zoomEnd = zoomEnd ?? max;
+
+  @override
+  List<Object?> get props => [
+        min,
+        max,
+        zoomStart,
+        zoomEnd,
+        backgroundColor,
+        areaColor,
+        height,
+      ];
+}
+
 class ScopeChartData with EquatableMixin {
   final Iterable<ScopeChannelData> channelsData;
   final ScopeAxis timeAxis;
@@ -343,6 +377,7 @@ class ScopeChartData with EquatableMixin {
   final Color backgroundColor;
   final ScopeChannelData? activeChannel;
   final bool stopped;
+  final ScopeZoomArea? zoomArea;
 
   double get minX => timeAxis.min ?? 0;
   double get maxX => timeAxis.max ?? 0;
@@ -352,6 +387,7 @@ class ScopeChartData with EquatableMixin {
     this.stopped = false,
     this.timeAxis = const ScopeAxis(min: 0, max: 5000),
     this.activeChannel,
+    this.zoomArea,
     ScopeBorderData? borderData,
     FlClipData? clipData,
     Color? backgroundColor,

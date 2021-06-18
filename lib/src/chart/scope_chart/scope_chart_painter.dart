@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -74,28 +73,10 @@ class ScopeChartPainter {
   void paint(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
     ScopeChartData data = holder.data;
 
-    // if (data.clipData.any) {
-    //   canvasWrapper.saveLayer(
-    //     Rect.fromLTWH(
-    //       0,
-    //       -40,
-    //       canvasWrapper.size.width + 40,
-    //       canvasWrapper.size.height + 40,
-    //     ),
-    //     Paint(),
-    //   );
-
-    //   _clipToBorder(canvasWrapper, holder);
-    // }
-
     for (final channelData in data.channelsData) {
       if (!channelData.show || channelData.spots.isEmpty) continue;
       _drawChannel(canvasWrapper, data, channelData, holder);
     }
-
-    // if (data.clipData.any) {
-    //   canvasWrapper.restore();
-    // }
 
     _drawBackground(canvasWrapper, holder);
     _drawViewBorder(canvasWrapper, holder);
@@ -406,7 +387,7 @@ class ScopeChartPainter {
             max,
             viewSize,
             holder,
-          ).roundToDouble();
+          );
           final x1 = bothX;
           final y1 = 0.0;
           final x2 = bothX;
@@ -721,10 +702,10 @@ class ScopeChartPainter {
     final deltaX = maxX - minX;
     final leftOffset = _getLeftOffsetDrawSize(holder);
     if (deltaX == 0.0) {
-      return leftOffset.roundToDouble();
+      return leftOffset;
     }
     final x = (((spotX - minX) / deltaX) * chartUsableSize.width) + leftOffset;
-    return x.roundToDouble();
+    return x;
   }
 
   /// With this function we can convert our [FlSpot] y
@@ -738,12 +719,12 @@ class ScopeChartPainter {
   ) {
     final deltaY = maxY - minY;
     if (deltaY == 0.0) {
-      return chartUsableSize.height.roundToDouble();
+      return chartUsableSize.height;
     }
 
     var y = ((spotY - minY) / deltaY) * chartUsableSize.height;
     y = chartUsableSize.height - y;
-    return y.roundToDouble();
+    return y;
   }
 
   bool _checkToShowTitle(

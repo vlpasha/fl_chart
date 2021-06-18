@@ -1,40 +1,21 @@
 import 'package:fl_chart/src/utils/canvas_wrapper.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 
 import 'scope_chart_data.dart';
 import 'scope_chart_painter.dart';
 
-/// Low level LineChart Widget.
-// class ScopeChartLeaf extends LeafRenderObjectWidget {
-//   const ScopeChartLeaf({Key? key, required this.data}) : super(key: key);
-
-//   final ScopeChartData data;
-
-//   @override
-//   RenderScopeChart createRenderObject(BuildContext context) =>
-//       RenderScopeChart(data, MediaQuery.of(context).textScaleFactor);
-
-//   @override
-//   void updateRenderObject(BuildContext context, RenderScopeChart renderObject) {
-//     renderObject
-//       ..data = data
-//       ..textScale = MediaQuery.of(context).textScaleFactor;
-//   }
-// }
-
-/// Renders our LineChart, also handles hitTest.
 class RenderScopeChart extends CustomPainter {
+  final Animation? listenable;
   final ScopeChartData _data;
   final double _textScale;
   RenderScopeChart({
     required ScopeChartData data,
     required double textScale,
+    this.listenable,
   })  : _data = data,
         _textScale = textScale,
-        super();
+        super(repaint: listenable);
 
   final _painter = ScopeChartPainter();
 
