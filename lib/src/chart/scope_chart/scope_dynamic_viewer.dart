@@ -20,6 +20,7 @@ class ScopeDynamicViewer extends StatefulWidget {
     this.resetStream,
     this.axisControl = true,
     this.stopped = false,
+    this.reset = false,
   }) : super(key: key);
 
   final int timeWindow;
@@ -28,8 +29,8 @@ class ScopeDynamicViewer extends StatefulWidget {
   final ScopeLegendData? legendData;
   final ScopeAxis? timeAxis;
   final Stream<bool>? resetStream;
-
   final bool stopped;
+  final bool reset;
   final bool axisControl;
 
   @override
@@ -96,6 +97,7 @@ class _ScopeDynamicViewerState extends State<ScopeDynamicViewer>
             realTime: true,
             stopped: _stopped,
             resetStream: widget.resetStream,
+            reset: widget.reset,
             timeAxis: widget.timeAxis,
             borderData: widget.borderData,
             legendData: widget.legendData,
