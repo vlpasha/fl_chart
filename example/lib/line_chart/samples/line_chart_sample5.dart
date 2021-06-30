@@ -46,7 +46,7 @@ class LineChartSample5 extends StatelessWidget {
           ]),
     ];
 
-    final LineChartBarData tooltipsOnBar = lineBarsData[0];
+    final tooltipsOnBar = lineBarsData[0];
 
     return SizedBox(
       width: 300,
@@ -61,8 +61,7 @@ class LineChartSample5 extends StatelessWidget {
           }).toList(),
           lineTouchData: LineTouchData(
             enabled: false,
-            getTouchedSpotIndicator:
-                (LineChartBarData barData, List<int> spotIndexes) {
+            getTouchedSpotIndicator: (barData, spotIndexes) {
               return spotIndexes.map((index) {
                 return TouchedSpotIndicatorData(
                   FlLine(
@@ -85,7 +84,7 @@ class LineChartSample5 extends StatelessWidget {
             touchTooltipData: LineTouchTooltipData(
               tooltipBgColor: Colors.pink,
               tooltipRoundedRadius: 8,
-              getTooltipItems: (List<LineBarSpot> lineBarsSpot) {
+              getTooltipItems: (lineBarsSpot) {
                 return lineBarsSpot.map((lineBarSpot) {
                   return LineTooltipItem(
                     lineBarSpot.y.toString(),

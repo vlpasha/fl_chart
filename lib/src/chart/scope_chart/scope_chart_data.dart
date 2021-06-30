@@ -4,10 +4,15 @@ import 'dart:ui';
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/src/chart/base/axis_chart/axis_chart_data.dart';
 import 'package:fl_chart/src/chart/base/base_chart/base_chart_data.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Image;
 
 import 'scope_chart_helper.dart';
+
+class ScopePaintHolder {
+  final dynamic data;
+  final double textScale;
+  ScopePaintHolder(this.data, this.textScale);
+}
 
 class ScopeBorderData with EquatableMixin {
   final bool showBorder;
@@ -112,6 +117,7 @@ class ScopeAxisTitles with EquatableMixin {
   final TextDirection textDirection;
   final double margin;
   final double rotateAngle;
+  final double padding;
 
   const ScopeAxisTitles({
     this.showTitles = true,
@@ -122,6 +128,7 @@ class ScopeAxisTitles with EquatableMixin {
     this.textDirection = TextDirection.ltr,
     this.margin = 6,
     this.rotateAngle = 0.0,
+    this.padding = 4.0,
   }) : textStyle = textStyle ??
             const TextStyle(
               color: Colors.black,
@@ -342,8 +349,9 @@ class ScopeZoomArea with EquatableMixin {
   final double zoomStart;
   final double zoomEnd;
   final Color backgroundColor;
-  final Color areaColor;
+  final Color cursorColor;
   final double height;
+  final double minWidth;
 
   ScopeZoomArea({
     this.show = false,
@@ -352,10 +360,34 @@ class ScopeZoomArea with EquatableMixin {
     double? zoomStart,
     double? zoomEnd,
     this.backgroundColor = Colors.transparent,
-    this.areaColor = Colors.lightBlue,
+    this.cursorColor = Colors.lightBlue,
     this.height = 40.0,
+    this.minWidth = 5.0,
   })  : zoomStart = zoomStart ?? min,
         zoomEnd = zoomEnd ?? max;
+
+  ScopeZoomArea copyWith({
+    bool? show,
+    double? min,
+    double? max,
+    double? zoomStart,
+    double? zoomEnd,
+    Color? backgroundColor,
+    Color? cursorColor,
+    double? height,
+    double? minWidth,
+  }) =>
+      ScopeZoomArea(
+        show: show ?? this.show,
+        min: min ?? this.min,
+        max: max ?? this.max,
+        zoomStart: zoomStart ?? this.zoomStart,
+        zoomEnd: zoomEnd ?? this.zoomEnd,
+        backgroundColor: backgroundColor ?? this.backgroundColor,
+        cursorColor: cursorColor ?? this.cursorColor,
+        height: height ?? this.height,
+        minWidth: minWidth ?? this.minWidth,
+      );
 
   @override
   List<Object?> get props => [
@@ -364,7 +396,7 @@ class ScopeZoomArea with EquatableMixin {
         zoomStart,
         zoomEnd,
         backgroundColor,
-        areaColor,
+        cursorColor,
         height,
       ];
 }
@@ -396,7 +428,7 @@ class ScopeChartData with EquatableMixin {
         clipData = clipData ?? FlClipData.none();
 
   ScopeChartData copyWith({
-    Iterable<ScopeChannelData>? channels,
+    Iterable<ScopeChannelData>? channelsData,
     ScopeAxis? timeAxis,
     ScopeBorderData? borderData,
     double? minX,
@@ -406,7 +438,7 @@ class ScopeChartData with EquatableMixin {
     ScopeChannelData? activeChannel,
   }) =>
       ScopeChartData(
-        channelsData: channels ?? this.channelsData,
+        channelsData: channelsData ?? this.channelsData,
         timeAxis: timeAxis ?? this.timeAxis,
         borderData: borderData ?? this.borderData,
         backgroundColor: backgroundColor ?? this.backgroundColor,

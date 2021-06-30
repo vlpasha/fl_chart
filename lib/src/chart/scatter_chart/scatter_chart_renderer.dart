@@ -11,7 +11,10 @@ import 'scatter_chart_painter.dart';
 /// Low level ScatterChart Widget.
 class ScatterChartLeaf extends LeafRenderObjectWidget {
   const ScatterChartLeaf(
-      {Key? key, required this.data, required this.targetData, this.touchCallback})
+      {Key? key,
+      required this.data,
+      required this.targetData,
+      this.touchCallback})
       : super(key: key);
 
   final ScatterChartData data, targetData;
@@ -20,10 +23,12 @@ class ScatterChartLeaf extends LeafRenderObjectWidget {
 
   @override
   RenderScatterChart createRenderObject(BuildContext context) =>
-      RenderScatterChart(data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
+      RenderScatterChart(data, targetData,
+          MediaQuery.of(context).textScaleFactor, touchCallback);
 
   @override
-  void updateRenderObject(BuildContext context, RenderScatterChart renderObject) {
+  void updateRenderObject(
+      BuildContext context, RenderScatterChart renderObject) {
     renderObject
       ..data = data
       ..targetData = targetData
@@ -34,8 +39,8 @@ class ScatterChartLeaf extends LeafRenderObjectWidget {
 
 /// Renders our ScatterChart, also handles hitTest.
 class RenderScatterChart extends RenderBox {
-  RenderScatterChart(ScatterChartData data, ScatterChartData targetData, double textScale,
-      ScatterTouchCallback? touchCallback)
+  RenderScatterChart(ScatterChartData data, ScatterChartData targetData,
+      double textScale, ScatterTouchCallback? touchCallback)
       : _data = data,
         _targetData = targetData,
         _textScale = textScale,
@@ -66,6 +71,7 @@ class RenderScatterChart extends RenderBox {
   }
 
   ScatterTouchCallback? _touchCallback;
+  // ignore: avoid_setters_without_getters
   set touchCallback(ScatterTouchCallback? value) {
     _touchCallback = value;
   }

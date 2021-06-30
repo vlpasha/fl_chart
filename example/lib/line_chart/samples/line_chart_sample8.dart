@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:fl_chart/fl_chart.dart';
@@ -21,20 +20,19 @@ class _LineChartSample8State extends State<LineChartSample8> {
   bool showAvg = false;
 
   Future<ui.Image> loadImage(String asset) async {
-    final ByteData data = await rootBundle.load(asset);
-    final ui.Codec codec =
-        await ui.instantiateImageCodec(data.buffer.asUint8List());
-    final ui.FrameInfo fi = await codec.getNextFrame();
+    final data = await rootBundle.load(asset);
+    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+    final fi = await codec.getNextFrame();
     return fi.image;
   }
 
   Future<SizedPicture> loadSvg() async {
-    const String rawSvg =
+    const rawSvg =
         '<svg height="14" width="14" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd" transform="translate(-.000014)"><circle cx="7" cy="7" fill="#495DFF" r="7"/><path d="m7 10.9999976c1.6562389 0 2.99998569-1.34374678 2.99998569-2.99999283s-1.34374679-4.99998808-2.99998569-4.99998808c-1.6562532 0-3 3.34374203-3 4.99998808s1.3437468 2.99999283 3 2.99999283z" fill="#fff" fill-rule="nonzero"/></g></svg>';
 
-    final DrawableRoot svgRoot = await svg.fromSvgString(rawSvg, rawSvg);
+    final svgRoot = await svg.fromSvgString(rawSvg, rawSvg);
 
-    final ui.Picture picture = svgRoot.toPicture();
+    final picture = svgRoot.toPicture();
     final sizedPicture = SizedPicture(picture, 14, 14);
     return sizedPicture;
   }
@@ -43,7 +41,7 @@ class _LineChartSample8State extends State<LineChartSample8> {
   Widget build(BuildContext context) {
     return FutureBuilder<SizedPicture>(
         future: loadSvg(),
-        builder: (BuildContext context, imageSnapshot) {
+        builder: (context, imageSnapshot) {
           if (imageSnapshot.connectionState == ConnectionState.done) {
             return Stack(
               children: <Widget>[
@@ -158,8 +156,7 @@ class _LineChartSample8State extends State<LineChartSample8> {
       ),
       lineTouchData: LineTouchData(
         getTouchLineEnd: (data, index) => double.infinity,
-        getTouchedSpotIndicator:
-            (LineChartBarData barData, List<int> spotIndexes) {
+        getTouchedSpotIndicator: (barData, spotIndexes) {
           return spotIndexes.map((spotIndex) {
             return TouchedSpotIndicatorData(
               FlLine(color: Colors.orange, strokeWidth: 3),

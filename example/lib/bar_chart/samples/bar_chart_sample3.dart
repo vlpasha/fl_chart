@@ -25,15 +25,10 @@ class BarChartSample3State extends State<BarChartSample3> {
                 tooltipBgColor: Colors.transparent,
                 tooltipPadding: const EdgeInsets.all(0),
                 tooltipMargin: 8,
-                getTooltipItem: (
-                  BarChartGroupData group,
-                  int groupIndex,
-                  BarChartRodData rod,
-                  int rodIndex,
-                ) {
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
                   return BarTooltipItem(
                     rod.y.round().toString(),
-                    TextStyle(
+                    const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -50,7 +45,7 @@ class BarChartSample3State extends State<BarChartSample3> {
                     fontWeight: FontWeight.bold,
                     fontSize: 14),
                 margin: 20,
-                getTitles: (double value) {
+                getTitles: (value) {
                   switch (value.toInt()) {
                     case 0:
                       return 'Mn';

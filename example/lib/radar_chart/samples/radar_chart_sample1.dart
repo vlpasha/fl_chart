@@ -61,10 +61,13 @@ class _RadarChartSample1State extends State<RadarChartSample1> {
                         margin: const EdgeInsets.symmetric(vertical: 2),
                         height: 26,
                         decoration: BoxDecoration(
-                          color: isSelected ? gridColor.withOpacity(0.5) : Colors.transparent,
+                          color: isSelected
+                              ? gridColor.withOpacity(0.5)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(46),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 4.0, horizontal: 6),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -104,7 +107,8 @@ class _RadarChartSample1State extends State<RadarChartSample1> {
                       response.touchInput is! PointerUpEvent &&
                       response.touchInput is! PointerExitEvent) {
                     setState(() {
-                      selectedDataSetIndex = response?.touchedSpot?.touchedDataSetIndex ?? -1;
+                      selectedDataSetIndex =
+                          response?.touchedSpot?.touchedDataSetIndex ?? -1;
                     });
                   } else {
                     setState(() {
@@ -117,7 +121,8 @@ class _RadarChartSample1State extends State<RadarChartSample1> {
                 borderData: FlBorderData(show: false),
                 radarBorderData: const BorderSide(color: Colors.transparent),
                 titlePositionPercentageOffset: 0.2,
-                titleTextStyle: const TextStyle(color: titleColor, fontSize: 14),
+                titleTextStyle:
+                    const TextStyle(color: titleColor, fontSize: 14),
                 getTitle: (index) {
                   switch (index) {
                     case 0:
@@ -131,7 +136,8 @@ class _RadarChartSample1State extends State<RadarChartSample1> {
                   }
                 },
                 tickCount: 1,
-                ticksTextStyle: const TextStyle(color: Colors.transparent, fontSize: 10),
+                ticksTextStyle:
+                    const TextStyle(color: Colors.transparent, fontSize: 10),
                 tickBorderData: const BorderSide(color: Colors.transparent),
                 gridBorderData: const BorderSide(color: gridColor, width: 2),
               ),
@@ -144,7 +150,7 @@ class _RadarChartSample1State extends State<RadarChartSample1> {
   }
 
   List<RadarDataSet> showingDataSets() {
-    final List<RadarDataSet> dataSets = List(rawDataSets().length);
+    final dataSets = List<RadarDataSet>.filled(rawDataSets().length, null);
     rawDataSets().asMap().forEach((index, rawDataSet) {
       final isSelected = index == selectedDataSetIndex
           ? true
@@ -152,11 +158,14 @@ class _RadarChartSample1State extends State<RadarChartSample1> {
               ? true
               : false;
       dataSets[index] = RadarDataSet(
-        fillColor:
-            isSelected ? rawDataSet.color.withOpacity(0.4) : rawDataSet.color.withOpacity(0.25),
-        borderColor: isSelected ? rawDataSet.color : rawDataSet.color.withOpacity(0.25),
+        fillColor: isSelected
+            ? rawDataSet.color.withOpacity(0.4)
+            : rawDataSet.color.withOpacity(0.25),
+        borderColor:
+            isSelected ? rawDataSet.color : rawDataSet.color.withOpacity(0.25),
         entryRadius: isSelected ? 3 : 2,
-        dataEntries: rawDataSet.values.map((e) => RadarEntry(value: e)).toList(),
+        dataEntries:
+            rawDataSet.values.map((e) => RadarEntry(value: e)).toList(),
         borderWidth: isSelected ? 2.3 : 2,
       );
     });

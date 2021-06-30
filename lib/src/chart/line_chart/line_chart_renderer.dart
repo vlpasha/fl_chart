@@ -9,7 +9,11 @@ import 'package:flutter/rendering.dart';
 
 /// Low level LineChart Widget.
 class LineChartLeaf extends LeafRenderObjectWidget {
-  const LineChartLeaf({Key? key, required this.data, required this.targetData, this.touchCallback})
+  const LineChartLeaf(
+      {Key? key,
+      required this.data,
+      required this.targetData,
+      this.touchCallback})
       : super(key: key);
 
   final LineChartData data, targetData;
@@ -17,8 +21,8 @@ class LineChartLeaf extends LeafRenderObjectWidget {
   final LineTouchCallback? touchCallback;
 
   @override
-  RenderLineChart createRenderObject(BuildContext context) =>
-      RenderLineChart(data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
+  RenderLineChart createRenderObject(BuildContext context) => RenderLineChart(
+      data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
 
   @override
   void updateRenderObject(BuildContext context, RenderLineChart renderObject) {
@@ -32,8 +36,8 @@ class LineChartLeaf extends LeafRenderObjectWidget {
 
 /// Renders our LineChart, also handles hitTest.
 class RenderLineChart extends RenderBox {
-  RenderLineChart(LineChartData data, LineChartData targetData, double textScale,
-      LineTouchCallback? touchCallback)
+  RenderLineChart(LineChartData data, LineChartData targetData,
+      double textScale, LineTouchCallback? touchCallback)
       : _data = data,
         _targetData = targetData,
         _textScale = textScale,
@@ -64,6 +68,7 @@ class RenderLineChart extends RenderBox {
   }
 
   LineTouchCallback? _touchCallback;
+  // ignore: avoid_setters_without_getters
   set touchCallback(LineTouchCallback? value) {
     _touchCallback = value;
   }

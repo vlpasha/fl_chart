@@ -1,6 +1,7 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 // ignore: must_be_immutable
 class LineChartSample9 extends StatelessWidget {
@@ -8,7 +9,7 @@ class LineChartSample9 extends StatelessWidget {
       .map((x) => FlSpot(x, sin(x)))
       .toList();
 
-  LineChartSample9() {}
+  LineChartSample9();
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +26,15 @@ class LineChartSample9 extends StatelessWidget {
                     maxContentWidth: 100,
                     tooltipBgColor: Colors.orange,
                     getTooltipItems: (touchedSpots) {
-                      return touchedSpots.map((LineBarSpot touchedSpot) {
+                      return touchedSpots.map((touchedSpot) {
                         final textStyle = TextStyle(
                           color: touchedSpot.bar.colors[0],
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         );
                         return LineTooltipItem(
-                            '${touchedSpot.x}, ${touchedSpot.y.toStringAsFixed(2)}',
+                            '${touchedSpot.x},'
+                            '${touchedSpot.y.toStringAsFixed(2)}',
                             textStyle);
                       }).toList();
                     }),

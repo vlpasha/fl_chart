@@ -376,7 +376,7 @@ class FlSpot with EquatableMixin {
   ///Prints x and y coordinates of FlSpot list
   @override
   String toString() {
-    return '(' + x.toString() + ', ' + y.toString() + ')';
+    return '($x, $y)';
   }
 
   /// Used for splitting lines, or maybe other concepts.

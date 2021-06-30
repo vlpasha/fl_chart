@@ -47,8 +47,8 @@ class RenderPieChart extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, MultiChildLayoutParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, MultiChildLayoutParentData> {
-  RenderPieChart(
-      PieChartData data, PieChartData targetData, double textScale, PieTouchCallback? touchCallback)
+  RenderPieChart(PieChartData data, PieChartData targetData, double textScale,
+      PieTouchCallback? touchCallback)
       : _data = data,
         _targetData = targetData,
         _textScale = textScale,
@@ -81,6 +81,7 @@ class RenderPieChart extends RenderBox
   }
 
   PieTouchCallback? _touchCallback;
+  // ignore: avoid_setters_without_getters
   set touchCallback(PieTouchCallback? value) {
     _touchCallback = value;
   }

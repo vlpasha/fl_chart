@@ -5,7 +5,10 @@ linter:
     prefer_const_constructors: true
     prefer_const_declarations: true
     public_member_api_docs: false
-    prefer_relative_imports: false    
+    prefer_relative_imports: false
+    lines_longer_than_80_chars: false
+    prefer_initializing_formals: false
+    avoid_positional_boolean_parameters: false
 analyzer:
   enable-experiment:
     - non-nullable

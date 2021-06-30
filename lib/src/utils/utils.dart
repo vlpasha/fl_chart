@@ -39,28 +39,32 @@ BorderRadius? normalizeBorderRadius(BorderRadius? borderRadius, double width) {
   }
 
   Radius topLeft;
-  if (borderRadius.topLeft.x > width / 2 || borderRadius.topLeft.y > width / 2) {
+  if (borderRadius.topLeft.x > width / 2 ||
+      borderRadius.topLeft.y > width / 2) {
     topLeft = Radius.circular(width / 2);
   } else {
     topLeft = borderRadius.topLeft;
   }
 
   Radius topRight;
-  if (borderRadius.topRight.x > width / 2 || borderRadius.topRight.y > width / 2) {
+  if (borderRadius.topRight.x > width / 2 ||
+      borderRadius.topRight.y > width / 2) {
     topRight = Radius.circular(width / 2);
   } else {
     topRight = borderRadius.topRight;
   }
 
   Radius bottomLeft;
-  if (borderRadius.bottomLeft.x > width / 2 || borderRadius.bottomLeft.y > width / 2) {
+  if (borderRadius.bottomLeft.x > width / 2 ||
+      borderRadius.bottomLeft.y > width / 2) {
     bottomLeft = Radius.circular(width / 2);
   } else {
     bottomLeft = borderRadius.bottomLeft;
   }
 
   Radius bottomRight;
-  if (borderRadius.bottomRight.x > width / 2 || borderRadius.bottomRight.y > width / 2) {
+  if (borderRadius.bottomRight.x > width / 2 ||
+      borderRadius.bottomRight.y > width / 2) {
     bottomRight = Radius.circular(width / 2);
   } else {
     bottomRight = borderRadius.bottomRight;
@@ -97,7 +101,8 @@ Color lerpGradient(List<Color> colors, List<double> stops, double t) {
 
 /// Returns an efficient interval for showing axis titles, or grid lines or ...
 ///
-/// If there isn't any provided interval, we use this function to calculate an interval to apply,
+/// If there isn't any provided interval,
+/// we use this function to calculate an interval to apply,
 /// using [axisViewSize] / [pixelPerInterval], we calculate the allowedCount lines in the axis,
 /// then using  [diffInYAxis] / allowedCount, we can find out how much interval we need,
 /// then we round that number by finding nearest number in this pattern:

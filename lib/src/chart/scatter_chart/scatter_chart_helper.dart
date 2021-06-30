@@ -3,16 +3,19 @@ import 'package:fl_chart/src/utils/list_wrapper.dart';
 
 import 'scatter_chart_data.dart';
 
+// ignore: avoid_classes_with_only_static_members
 /// Contains anything that helps ScatterChart works
 class ScatterChartHelper {
   /// Contains List of cached results, base on [List<ScatterSpot>]
   ///
   /// We use it to prevent redundant calculations
-  static final Map<ListWrapper<ScatterSpot>, ScatterChartMinMaxAxisValues> _cachedResults = {};
+  static final Map<ListWrapper<ScatterSpot>, ScatterChartMinMaxAxisValues>
+      _cachedResults = {};
 
   /// Calculates minX, maxX, minY, and maxY based on [scatterSpots],
   /// returns cached values, to prevent redundant calculations.
-  static ScatterChartMinMaxAxisValues calculateMaxAxisValues(List<ScatterSpot> scatterSpots) {
+  static ScatterChartMinMaxAxisValues calculateMaxAxisValues(
+      List<ScatterSpot> scatterSpots) {
     if (scatterSpots.isEmpty) {
       return ScatterChartMinMaxAxisValues(0, 0, 0, 0);
     }
@@ -72,7 +75,11 @@ class ScatterChartMinMaxAxisValues with EquatableMixin {
   List<Object?> get props => [minX, maxX, minY, maxY, readFromCache];
 
   ScatterChartMinMaxAxisValues copyWith(
-      {double? minX, double? maxX, double? minY, double? maxY, bool? readFromCache}) {
+      {double? minX,
+      double? maxX,
+      double? minY,
+      double? maxY,
+      bool? readFromCache}) {
     return ScatterChartMinMaxAxisValues(
       minX ?? this.minX,
       maxX ?? this.maxX,

@@ -5,11 +5,11 @@ import 'package:flutter/rendering.dart';
 import 'scope_chart_data.dart';
 import 'scope_chart_painter.dart';
 
-class RenderScopeChart extends CustomPainter {
+class ScopeChartRenderer extends CustomPainter {
   final Animation? listenable;
   final ScopeChartData _data;
   final double _textScale;
-  RenderScopeChart({
+  ScopeChartRenderer({
     required ScopeChartData data,
     required double textScale,
     this.listenable,
@@ -22,7 +22,7 @@ class RenderScopeChart extends CustomPainter {
   ScopePaintHolder get paintHolder => ScopePaintHolder(_data, _textScale);
 
   @override
-  bool shouldRepaint(RenderScopeChart oldDelegate) =>
+  bool shouldRepaint(ScopeChartRenderer oldDelegate) =>
       oldDelegate._data != _data;
 
   @override
@@ -34,12 +34,12 @@ class RenderScopeChart extends CustomPainter {
   }
 }
 
-class RenderScopeLegend extends CustomPainter {
+class ScopeLegendRenderer extends CustomPainter {
   final ScopeLegendData _data;
   final Iterable<ScopeChannelData> _channels;
   final double _textScale;
 
-  RenderScopeLegend({
+  ScopeLegendRenderer({
     required ScopeLegendData data,
     required double textScale,
     required Iterable<ScopeChannelData> channels,
@@ -51,7 +51,7 @@ class RenderScopeLegend extends CustomPainter {
   final _painter = ScopeChartLegendPainter();
 
   @override
-  bool shouldRepaint(RenderScopeLegend oldDelegate) =>
+  bool shouldRepaint(ScopeLegendRenderer oldDelegate) =>
       oldDelegate._data != _data;
 
   @override

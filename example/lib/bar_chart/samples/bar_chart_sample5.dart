@@ -40,7 +40,7 @@ class BarChartSample5State extends State<BarChartSample5> {
                   textStyle: const TextStyle(color: Colors.white, fontSize: 10),
                   margin: 10,
                   rotateAngle: 0,
-                  getTitles: (double value) {
+                  getTitles: (value) {
                     switch (value.toInt()) {
                       case 0:
                         return 'Mon';
@@ -66,7 +66,7 @@ class BarChartSample5State extends State<BarChartSample5> {
                   textStyle: const TextStyle(color: Colors.white, fontSize: 10),
                   margin: 10,
                   rotateAngle: 0,
-                  getTitles: (double value) {
+                  getTitles: (value) {
                     switch (value.toInt()) {
                       case 0:
                         return 'Mon';
@@ -91,7 +91,7 @@ class BarChartSample5State extends State<BarChartSample5> {
                   showTitles: true,
                   textStyle: const TextStyle(color: Colors.white, fontSize: 10),
                   rotateAngle: 45,
-                  getTitles: (double value) {
+                  getTitles: (value) {
                     if (value == 0) {
                       return '0';
                     }
@@ -105,7 +105,7 @@ class BarChartSample5State extends State<BarChartSample5> {
                   showTitles: true,
                   textStyle: const TextStyle(color: Colors.white, fontSize: 10),
                   rotateAngle: 90,
-                  getTitles: (double value) {
+                  getTitles: (value) {
                     if (value == 0) {
                       return '0';
                     }

@@ -9,38 +9,31 @@ class EcuFpeActuatorTempPoint {
   EcuFpeActuatorTempPoint(this.temp, this.duration);
 }
 
-class ActTempHistoryChart extends StatelessWidget {
-  List<FlSpot> _spots;
+class ActTempHistoryChart extends StatefulWidget {
+  final List<EcuFpeActuatorTempPoint> data;
+
+  ActTempHistoryChart({
+    Key key,
+    @required this.data,
+  }) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _ActTempHistoryChartState();
+}
+
+class _ActTempHistoryChartState extends State<ActTempHistoryChart> {
   final List<Color> _colors = [
     Colors.blue,
     Colors.yellow,
     Colors.yellow,
     Colors.red,
   ];
+  List<FlSpot> _spots;
   List<double> _stops;
   double _minX;
   double _maxX;
-  double _minY;
-  double _maxY;
-
   final double tempLow = 135.0;
   final double tempHigh = 150.0;
-
-  ActTempHistoryChart({
-    Key key,
-    @required List<EcuFpeActuatorTempPoint> data,
-  }) : super(key: key) {
-    _spots = data
-        .map((item) => FlSpot(
-              item.temp.toDouble(),
-              item.duration.inMinutes.toDouble(),
-            ))
-        .toList();
-    _spots.sort((a, b) => a.x.compareTo(b.x));
-    _minX = _spots.first.x;
-    _maxX = _spots.last.x;
-    _stops = _calcStops(tempLow, tempHigh, _minX, _maxX);
-  }
 
   List<double> _calcStops(double low, double high, double min, double max) {
     var lowToMedStop = (low - min) / (max - min);
@@ -77,6 +70,7 @@ class ActTempHistoryChart extends StatelessWidget {
         bottomTitles: SideTitles(
           showTitles: true,
           getTitles: (value) => value.toStringAsFixed(0),
+          // reservedSize: 50,
         ),
         leftTitles: SideTitles(
           showTitles: true,
@@ -106,6 +100,21 @@ class ActTempHistoryChart extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _spots = widget.data
+        .map((item) => FlSpot(
+              item.temp.toDouble(),
+              item.duration.inMinutes.toDouble(),
+            ))
+        .toList();
+    _spots.sort((a, b) => a.x.compareTo(b.x));
+    _minX = _spots.first.x;
+    _maxX = _spots.last.x;
+    _stops = _calcStops(tempLow, tempHigh, _minX, _maxX);
   }
 
   @override

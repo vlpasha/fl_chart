@@ -49,7 +49,8 @@ class _BarChartState extends AnimatedWidgetBaseState<BarChart> {
   }
 
   BarChartData _withTouchedIndicators(BarChartData barChartData) {
-    if (!barChartData.barTouchData.enabled || !barChartData.barTouchData.handleBuiltInTouches) {
+    if (!barChartData.barTouchData.enabled ||
+        !barChartData.barTouchData.handleBuiltInTouches) {
       return barChartData;
     }
 
@@ -73,7 +74,8 @@ class _BarChartState extends AnimatedWidgetBaseState<BarChart> {
     final barTouchData = widget.data.barTouchData;
     if (barTouchData.enabled && barTouchData.handleBuiltInTouches) {
       return widget.data.copyWith(
-        barTouchData: widget.data.barTouchData.copyWith(touchCallback: _handleBuiltInTouch),
+        barTouchData: widget.data.barTouchData
+            .copyWith(touchCallback: _handleBuiltInTouch),
       );
     }
     return widget.data;
@@ -98,14 +100,12 @@ class _BarChartState extends AnimatedWidgetBaseState<BarChart> {
         _showingTouchedTooltips[groupIndex] = [rodIndex];
       });
     } else {
-      setState(() {
-        _showingTouchedTooltips.clear();
-      });
+      setState(_showingTouchedTooltips.clear);
     }
   }
 
   @override
-  void forEachTween(visitor) {
+  void forEachTween(dynamic visitor) {
     _barChartDataTween = visitor(
       _barChartDataTween,
       widget.data,

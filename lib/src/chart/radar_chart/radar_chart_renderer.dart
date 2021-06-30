@@ -10,7 +10,11 @@ import 'radar_chart_painter.dart';
 
 /// Low level RadarChart Widget.
 class RadarChartLeaf extends LeafRenderObjectWidget {
-  const RadarChartLeaf({Key? key, required this.data, required this.targetData, this.touchCallback})
+  const RadarChartLeaf(
+      {Key? key,
+      required this.data,
+      required this.targetData,
+      this.touchCallback})
       : super(key: key);
 
   final RadarChartData data, targetData;
@@ -18,8 +22,8 @@ class RadarChartLeaf extends LeafRenderObjectWidget {
   final RadarTouchCallback? touchCallback;
 
   @override
-  RenderRadarChart createRenderObject(BuildContext context) =>
-      RenderRadarChart(data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
+  RenderRadarChart createRenderObject(BuildContext context) => RenderRadarChart(
+      data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
 
   @override
   void updateRenderObject(BuildContext context, RenderRadarChart renderObject) {
@@ -33,8 +37,8 @@ class RadarChartLeaf extends LeafRenderObjectWidget {
 
 /// Renders our RadarChart, also handles hitTest.
 class RenderRadarChart extends RenderBox {
-  RenderRadarChart(RadarChartData data, RadarChartData targetData, double textScale,
-      RadarTouchCallback? touchCallback)
+  RenderRadarChart(RadarChartData data, RadarChartData targetData,
+      double textScale, RadarTouchCallback? touchCallback)
       : _data = data,
         _targetData = targetData,
         _textScale = textScale,
@@ -65,6 +69,7 @@ class RenderRadarChart extends RenderBox {
   }
 
   RadarTouchCallback? _touchCallback;
+  // ignore: avoid_setters_without_getters
   set touchCallback(RadarTouchCallback? value) {
     _touchCallback = value;
   }

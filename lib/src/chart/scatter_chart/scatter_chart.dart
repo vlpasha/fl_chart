@@ -42,7 +42,8 @@ class _ScatterChartState extends AnimatedWidgetBaseState<ScatterChart> {
     return GestureDetector(
       onLongPressStart: (details) {},
       child: ScatterChartLeaf(
-        data: _withTouchedIndicators(_scatterChartDataTween!.evaluate(animation)),
+        data:
+            _withTouchedIndicators(_scatterChartDataTween!.evaluate(animation)),
         targetData: _withTouchedIndicators(showingData),
         touchCallback: _handleBuiltInTouch,
       ),
@@ -64,7 +65,8 @@ class _ScatterChartState extends AnimatedWidgetBaseState<ScatterChart> {
     final scatterTouchData = widget.data.scatterTouchData;
     if (scatterTouchData.enabled && scatterTouchData.handleBuiltInTouches) {
       return widget.data.copyWith(
-        scatterTouchData: widget.data.scatterTouchData.copyWith(touchCallback: _handleBuiltInTouch),
+        scatterTouchData: widget.data.scatterTouchData
+            .copyWith(touchCallback: _handleBuiltInTouch),
       );
     }
     return widget.data;
@@ -88,7 +90,7 @@ class _ScatterChartState extends AnimatedWidgetBaseState<ScatterChart> {
   }
 
   @override
-  void forEachTween(visitor) {
+  void forEachTween(dynamic visitor) {
     _scatterChartDataTween = visitor(
       _scatterChartDataTween,
       _getData(),

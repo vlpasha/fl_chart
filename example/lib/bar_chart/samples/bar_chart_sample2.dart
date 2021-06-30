@@ -114,8 +114,8 @@ class BarChartSample2State extends State<BarChartSample2> {
                               } else {
                                 showingBarGroups = List.of(rawBarGroups);
                                 if (touchedGroupIndex != -1) {
-                                  double sum = 0;
-                                  for (BarChartRodData rod
+                                  var sum = 0.0;
+                                  for (var rod
                                       in showingBarGroups[touchedGroupIndex]
                                           .barRods) {
                                     sum += rod.y;
@@ -147,7 +147,7 @@ class BarChartSample2State extends State<BarChartSample2> {
                               fontWeight: FontWeight.bold,
                               fontSize: 14),
                           margin: 20,
-                          getTitles: (double value) {
+                          getTitles: (value) {
                             switch (value.toInt()) {
                               case 0:
                                 return 'Mn';
@@ -223,8 +223,8 @@ class BarChartSample2State extends State<BarChartSample2> {
   }
 
   Widget makeTransactionsIcon() {
-    const double width = 4.5;
-    const double space = 3.5;
+    const width = 4.5;
+    const space = 3.5;
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,

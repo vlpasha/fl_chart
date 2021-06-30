@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:fl_chart/src/utils/list_wrapper.dart';
 
 import 'scope_chart_data.dart';
 

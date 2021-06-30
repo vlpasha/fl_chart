@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 // class ScopeChannelModel {
@@ -163,15 +164,14 @@ import 'package:flutter/material.dart';
 
 class LineChartSample1 extends StatelessWidget {
   @override
-  Widget build(context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Expanded(child: DynamicScopeSample()),
-          Expanded(child: StaticScopeSample())
-        ],
-      );
+  Widget build(BuildContext context) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(child: DynamicScopeSample()),
+            Expanded(child: StaticScopeSample()),
+          ]);
 }
 
 class DynamicScopeSample extends StatefulWidget {
@@ -180,7 +180,7 @@ class DynamicScopeSample extends StatefulWidget {
 }
 
 class _DynamicScopeSampleState extends State<DynamicScopeSample> {
-  var rnd = Random();
+  Random rnd = Random();
   int timeStep = 30;
   double radians = 0.0;
   bool stop = false;
@@ -198,6 +198,7 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
 
   @override
   void initState() {
+    super.initState();
     _channels = [
       ScopeChartDynamicChannel(
         id: '0',
@@ -264,7 +265,6 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
         radians = 0.0;
       }
     });
-    super.initState();
   }
 
   @override
@@ -274,25 +274,14 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-        onDoubleTap: () {
-          setState(() => stop = !stop);
-        },
-        onTap: () {
-          setState(() =>
-              axisIndex < (_channels.length - 1) ? axisIndex++ : axisIndex = 0);
-        },
-        child: ScopeChart(
-          timeWindow: const Duration(seconds: 5).inMilliseconds,
-          channels: _channels,
-          channelAxisIndex: axisIndex,
-          stopped: stop,
-          legendData:
-              ScopeLegendData(showLegend: true, offset: Offset(100, 10)),
-          // timeAxis: const ScopeAxis(),
-        ));
-  }
+  Widget build(BuildContext context) => ScopeDynamicViewer(
+        timeWindow: const Duration(seconds: 5).inMilliseconds,
+        channels: _channels,
+        stopped: stop,
+        legendData:
+            ScopeLegendData(showLegend: true, offset: const Offset(100, 10)),
+        // timeAxis: const ScopeAxis(),
+      );
 }
 
 class StaticScopeSample extends StatefulWidget {
@@ -302,11 +291,9 @@ class StaticScopeSample extends StatefulWidget {
 }
 
 class _StaticScopeSampleState extends State<StaticScopeSample> {
-  double _min = 0;
-  double _max = 1000000;
-  double _timeWindow = 10000;
-  double _prevTimeWindow;
-  double _current = 0;
+  final int _min = 0;
+  final int _max = 10000000;
+  final int _timeWindow = 10000;
   int axisIndex = 0;
   List<ScopeChartStaticChannel> _channels;
 
@@ -338,61 +325,61 @@ class _StaticScopeSampleState extends State<StaticScopeSample> {
     return values;
   }
 
+  List<ScopeChartChannelValue> _linear(int count) {
+    var radians = 0.0;
+    var values = <ScopeChartChannelValue>[];
+    for (var i = 0; i < count; i++) {
+      values.add(ScopeChartChannelValue(
+        timestamp: Duration(seconds: i).inMilliseconds,
+        value: i.toDouble(),
+      ));
+      radians += 0.05;
+      if (radians > 2.0) radians = 0;
+    }
+    return values;
+  }
+
   @override
   void initState() {
     super.initState();
     _channels = [
       ScopeChartStaticChannel(
-          id: 'sin', color: Colors.red, values: _sin(10000, 0)),
+        id: 'sin',
+        color: Colors.red,
+        values: _sin(_max ~/ 1000, 0),
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'sin'),
+          titles: ScopeAxisTitles(reservedSize: 10),
+        ),
+      ),
       ScopeChartStaticChannel(
-          id: 'cos', color: Colors.green, values: _cos(10000, 0)),
+        id: 'cos',
+        color: Colors.green,
+        values: _cos(_max ~/ 1000, 0),
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'cos'),
+          titles: ScopeAxisTitles(reservedSize: 10),
+        ),
+      ),
+      ScopeChartStaticChannel(
+        id: 'line',
+        color: Colors.green,
+        values: _linear(_max ~/ 1000),
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'line'),
+          titles: ScopeAxisTitles(reservedSize: 10),
+        ),
+      ),
     ];
   }
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-      onTap: () => setState(() =>
-          axisIndex < (_channels.length - 1) ? axisIndex++ : axisIndex = 0),
-      onHorizontalDragUpdate: (details) {
-        var _newPos = _current - details.primaryDelta * 100;
-        if (_newPos < _min) {
-          _newPos = _min;
-        }
-        if ((_newPos + _timeWindow) > _max) {
-          _newPos = _max - _timeWindow;
-        }
-        setState(() => _current = _newPos);
-      },
-      onScaleStart: (_) => setState(() => _prevTimeWindow = _timeWindow),
-      onScaleUpdate: (details) {
-        var _newTimeWindow = _prevTimeWindow / details.scale;
-        setState(() {
-          print(_newTimeWindow);
-          if (_newTimeWindow > _timeWindow) {
-            _timeWindow += _newTimeWindow / 50;
-            _current -= _newTimeWindow / 100;
-          } else {
-            _timeWindow -= _newTimeWindow / 50;
-            _current += _newTimeWindow / 100;
-          }
-
-          if (_current < _min) {
-            _current = _min;
-          }
-
-          if (_current > _max) {
-            _current = _max;
-          }
-
-          if (_current + _timeWindow > _max) {
-            _timeWindow = _max - _current;
-          }
-        });
-      },
-      child: ScopeChart(
+  Widget build(BuildContext context) => ScopeStaticViewer(
+        timeStart: _min,
+        timeEnd: _max,
+        timeWindow: _timeWindow,
         channels: _channels,
-        timeAxis: ScopeAxis(min: _current, max: _current + _timeWindow),
-        channelAxisIndex: axisIndex,
-        realTime: false,
-      ));
+        panEnabled: true,
+        scaleEnabled: true,
+      );
 }

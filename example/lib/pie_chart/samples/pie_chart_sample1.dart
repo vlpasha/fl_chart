@@ -64,12 +64,16 @@ class PieChartSample1State extends State {
                 aspectRatio: 1,
                 child: PieChart(
                   PieChartData(
-                      pieTouchData: PieTouchData(touchCallback: (pieTouchResponse) {
+                      pieTouchData:
+                          PieTouchData(touchCallback: (pieTouchResponse) {
                         setState(() {
-                          final desiredTouch = pieTouchResponse.touchInput is! PointerExitEvent &&
+                          final desiredTouch = pieTouchResponse.touchInput
+                                  is! PointerExitEvent &&
                               pieTouchResponse.touchInput is! PointerUpEvent;
-                          if (desiredTouch && pieTouchResponse.touchedSection != null) {
-                            touchedIndex = pieTouchResponse.touchedSection.touchedSectionIndex;
+                          if (desiredTouch &&
+                              pieTouchResponse.touchedSection != null) {
+                            touchedIndex = pieTouchResponse
+                                .touchedSection.touchedSectionIndex;
                           } else {
                             touchedIndex = -1;
                           }
@@ -96,7 +100,7 @@ class PieChartSample1State extends State {
       4,
       (i) {
         final isTouched = i == touchedIndex;
-        final double opacity = isTouched ? 1 : 0.6;
+        final opacity = isTouched ? 1 : 0.6;
         switch (i) {
           case 0:
             return PieChartSectionData(
@@ -104,8 +108,10 @@ class PieChartSample1State extends State {
               value: 25,
               title: '',
               radius: 80,
-              titleStyle: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xff044d7c)),
+              titleStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff044d7c)),
               titlePositionPercentageOffset: 0.55,
             );
           case 1:
@@ -114,8 +120,10 @@ class PieChartSample1State extends State {
               value: 25,
               title: '',
               radius: 65,
-              titleStyle: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xff90672d)),
+              titleStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff90672d)),
               titlePositionPercentageOffset: 0.55,
             );
           case 2:
@@ -124,8 +132,10 @@ class PieChartSample1State extends State {
               value: 25,
               title: '',
               radius: 60,
-              titleStyle: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xff4c3788)),
+              titleStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff4c3788)),
               titlePositionPercentageOffset: 0.6,
             );
           case 3:
@@ -134,8 +144,10 @@ class PieChartSample1State extends State {
               value: 25,
               title: '',
               radius: 70,
-              titleStyle: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xff0c7f55)),
+              titleStyle: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xff0c7f55)),
               titlePositionPercentageOffset: 0.55,
             );
           default:

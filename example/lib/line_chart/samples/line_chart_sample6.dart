@@ -26,7 +26,7 @@ class LineChartSample6 extends StatelessWidget {
     minSpotY = spots.first.y;
     maxSpotY = spots.first.y;
 
-    for (FlSpot spot in spots) {
+    for (var spot in spots) {
       if (spot.x > maxSpotX) {
         maxSpotX = spot.x;
       }
@@ -120,7 +120,7 @@ class LineChartSample6 extends StatelessWidget {
                 titlesData: FlTitlesData(
                   leftTitles: SideTitles(
                     showTitles: true,
-                    getTitles: (double value) {
+                    getTitles: (value) {
                       final intValue =
                           reverseY(value, minSpotY, maxSpotY).toInt();
 
@@ -139,7 +139,7 @@ class LineChartSample6 extends StatelessWidget {
                   rightTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 0,
-                    getTitles: (double value) {
+                    getTitles: (value) {
                       final intValue =
                           reverseY(value, minSpotY, maxSpotY).toInt();
 
@@ -162,7 +162,7 @@ class LineChartSample6 extends StatelessWidget {
                     margin: 8,
                     textStyle: const TextStyle(
                         fontWeight: FontWeight.bold, color: Colors.black),
-                    getTitles: (double value) {
+                    getTitles: (value) {
                       return value.toInt().toString();
                     },
                   ),

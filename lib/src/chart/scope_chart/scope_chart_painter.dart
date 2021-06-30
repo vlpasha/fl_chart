@@ -11,12 +11,6 @@ import '../../utils/utils.dart' as utils;
 import '../base/axis_chart/axis_chart_data.dart';
 import 'scope_chart_data.dart';
 
-class ScopePaintHolder {
-  final dynamic data;
-  final double textScale;
-  ScopePaintHolder(this.data, this.textScale);
-}
-
 class ScopeChartLegendPainter {
   late Paint _legendPaint;
 
@@ -62,10 +56,12 @@ class ScopeChartPainter {
   late Paint _backgroundPaint;
   late Paint _axesPaint;
   late Paint _barPaint;
+  late Paint _zoomPaint;
 
   ScopeChartPainter() : super() {
     _borderPaint = Paint()..style = PaintingStyle.stroke;
     _backgroundPaint = Paint()..style = PaintingStyle.fill;
+    _zoomPaint = Paint()..style = PaintingStyle.fill;
     _axesPaint = Paint()..style = PaintingStyle.stroke;
     _barPaint = Paint()..style = PaintingStyle.stroke;
   }
@@ -81,6 +77,7 @@ class ScopeChartPainter {
     _drawBackground(canvasWrapper, holder);
     _drawViewBorder(canvasWrapper, holder);
     _drawAxes(canvasWrapper, holder);
+    _drawZoomArea(canvasWrapper, holder);
   }
 
   Rect _getClipRect(CanvasWrapper canvasWrapper, ScopePaintHolder holder) {
@@ -119,7 +116,40 @@ class ScopeChartPainter {
   void _drawZoomArea(
     CanvasWrapper canvasWrapper,
     ScopePaintHolder holder,
-  ) {}
+  ) {
+    final ScopeChartData data = holder.data;
+    final zoomArea = data.zoomArea;
+    if (zoomArea != null && zoomArea.show) {
+      final viewSize = canvasWrapper.size;
+      final usableViewSize = _getChartUsableDrawSize(viewSize, holder);
+      final startX = _getPixelX(zoomArea.zoomStart, zoomArea.min, zoomArea.max,
+          usableViewSize, holder);
+      final endX = _getPixelX(
+          zoomArea.zoomEnd, zoomArea.min, zoomArea.max, usableViewSize, holder);
+
+      _zoomPaint.color = zoomArea.backgroundColor;
+      canvasWrapper.drawRect(
+        Rect.fromLTWH(
+          _getLeftOffsetDrawSize(holder),
+          viewSize.height - zoomArea.height,
+          usableViewSize.width,
+          zoomArea.height,
+        ),
+        _zoomPaint,
+      );
+
+      _zoomPaint.color = zoomArea.cursorColor;
+      canvasWrapper.drawRect(
+        Rect.fromLTWH(
+          startX,
+          viewSize.height - zoomArea.height,
+          (endX - startX).clamp(zoomArea.minWidth, double.infinity),
+          zoomArea.height,
+        ),
+        _zoomPaint,
+      );
+    }
+  }
 
   void _drawBackground(
     CanvasWrapper canvasWrapper,
@@ -299,6 +329,7 @@ class ScopeChartPainter {
               textScaleFactor: holder.textScale,
             );
             tp.layout();
+            final textHeight = tp.height + titles.padding;
             var x = 0 + _getLeftOffsetDrawSize(holder);
             var y = _getPixelY(
               verticalSeek,
@@ -308,7 +339,7 @@ class ScopeChartPainter {
               holder,
             );
             x -= tp.width + titles.margin;
-            y -= tp.height / 2;
+            y -= textHeight / 2;
             final showTitle = _checkToShowTitle(
               channel.minY,
               channel.maxY,
@@ -316,14 +347,15 @@ class ScopeChartPainter {
               interval,
               verticalSeek,
             );
-            final skipTitle = lastTitleY != null && lastTitleY - tp.height <= y;
+            final skipTitle =
+                lastTitleY != null && lastTitleY - textHeight <= y;
             if (showTitle != false && skipTitle != true) {
               lastTitleY = y;
               canvasWrapper.save();
-              canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
+              canvasWrapper.translate(x + tp.width / 2, y + textHeight / 2);
               canvasWrapper.rotate(utils.radians(titles.rotateAngle));
               canvasWrapper.translate(
-                  -(x + tp.width / 2), -(y + tp.height / 2));
+                  -(x + tp.width / 2), -(y + textHeight / 2));
               y -= utils.translateRotatedPosition(tp.width, titles.rotateAngle);
               canvasWrapper.drawText(tp, Offset(x, y));
               canvasWrapper.restore();
@@ -388,13 +420,9 @@ class ScopeChartPainter {
             viewSize,
             holder,
           );
-          final x1 = bothX;
-          final y1 = 0.0;
-          final x2 = bothX;
-          final y2 = viewSize.height;
           canvasWrapper.drawDashedLine(
-            Offset(x1, y1),
-            Offset(x2, y2),
+            Offset(bothX, 0.0),
+            Offset(bothX, viewSize.height),
             _axesPaint,
             flLineStyle.dashArray,
           );
@@ -409,9 +437,10 @@ class ScopeChartPainter {
             textScaleFactor: holder.textScale,
           );
           tp.layout();
+          final textWidth = tp.width + titles.padding;
           var x = _getPixelX(horizontalSeek, min, max, viewSize, holder);
           var y = viewSize.height;
-          x -= tp.width / 2;
+          x -= textWidth / 2;
           y += titles.margin;
           final showTitle = _checkToShowTitle(
             min,
@@ -420,14 +449,14 @@ class ScopeChartPainter {
             interval,
             horizontalSeek,
           );
-          final skipTitle = lastTitleX + tp.width > x || x > viewSize.width;
+          final skipTitle = lastTitleX + textWidth > x || x > viewSize.width;
           if (showTitle != false && skipTitle != true) {
             lastTitleX = x;
             canvasWrapper.save();
-            canvasWrapper.translate(x + tp.width / 2, y + tp.height / 2);
+            canvasWrapper.translate(x + textWidth / 2, y + tp.height / 2);
             canvasWrapper.rotate(utils.radians(titles.rotateAngle));
-            canvasWrapper.translate(-(x + tp.width / 2), -(y + tp.height / 2));
-            x += utils.translateRotatedPosition(tp.width, titles.rotateAngle);
+            canvasWrapper.translate(-(x + textWidth / 2), -(y + tp.height / 2));
+            x += utils.translateRotatedPosition(textWidth, titles.rotateAngle);
             canvasWrapper.drawText(tp, Offset(x, y));
             canvasWrapper.restore();
           }
@@ -483,6 +512,7 @@ class ScopeChartPainter {
       path.lineTo(start.dx, start.dy);
     }
 
+    var skippedCount = 0;
     final iterator = spots.iterator;
     var curSpot = iterator.moveNext() ? iterator.current : null;
     var nextSpot = iterator.moveNext() ? iterator.current : curSpot;
@@ -524,6 +554,14 @@ class ScopeChartPainter {
         ),
       );
 
+      // if (current.dy.round() == next.dy.round() &&
+      //     current.dx.round() == next.dx.round()) {
+      //   curSpot = nextSpot;
+      //   nextSpot = iterator.moveNext() ? iterator.current : null;
+      //   skippedCount++;
+      //   continue;
+      // }
+
       if (current.dy == next.dy) {
         path.lineTo(next.dx, next.dy);
       } else {
@@ -538,6 +576,7 @@ class ScopeChartPainter {
     return path;
   }
 
+  // ignore: unused_element
   Path _generatePath(
     Size viewSize,
     ScopeChartData scopeData,
@@ -652,9 +691,13 @@ class ScopeChartPainter {
   }
 
   double _getExtraNeededVerticalSpace(ScopePaintHolder holder) {
-    final data = holder.data;
+    ScopeChartData data = holder.data;
     var sum = 0.0;
     final horizontalAxis = data.timeAxis;
+    final zoomArea = data.zoomArea;
+    if (zoomArea != null && zoomArea.show) {
+      sum += zoomArea.height;
+    }
 
     if (horizontalAxis.showAxis != false) {
       final title = horizontalAxis.title;

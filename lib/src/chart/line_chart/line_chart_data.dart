@@ -1502,7 +1502,7 @@ typedef GetTouchLineY = double Function(
 /// Default presentation of touched indicators.
 List<TouchedSpotIndicatorData> defaultTouchedIndicators(
     LineChartBarData barData, List<int> indicators) {
-  return indicators.map((int index) {
+  return indicators.map((index) {
     /// Indicator Line
     var lineColor = barData.colors[0];
     if (barData.dotData.show) {
@@ -1625,7 +1625,7 @@ typedef GetLineTooltipItems = List<LineTooltipItem?> Function(
 
 /// Default implementation for [LineTouchTooltipData.getTooltipItems].
 List<LineTooltipItem> defaultLineTooltipItem(List<LineBarSpot> touchedSpots) {
-  return touchedSpots.map((LineBarSpot touchedSpot) {
+  return touchedSpots.map((touchedSpot) {
     final textStyle = TextStyle(
       color: touchedSpot.bar.colors[0],
       fontWeight: FontWeight.bold,

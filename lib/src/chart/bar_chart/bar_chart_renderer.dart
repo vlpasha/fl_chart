@@ -10,7 +10,11 @@ import 'bar_chart_painter.dart';
 
 /// Low level BarChart Widget.
 class BarChartLeaf extends LeafRenderObjectWidget {
-  const BarChartLeaf({Key? key, required this.data, required this.targetData, this.touchCallback})
+  const BarChartLeaf(
+      {Key? key,
+      required this.data,
+      required this.targetData,
+      this.touchCallback})
       : super(key: key);
 
   final BarChartData data, targetData;
@@ -18,8 +22,8 @@ class BarChartLeaf extends LeafRenderObjectWidget {
   final BarTouchCallback? touchCallback;
 
   @override
-  RenderBarChart createRenderObject(BuildContext context) =>
-      RenderBarChart(data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
+  RenderBarChart createRenderObject(BuildContext context) => RenderBarChart(
+      data, targetData, MediaQuery.of(context).textScaleFactor, touchCallback);
 
   @override
   void updateRenderObject(BuildContext context, RenderBarChart renderObject) {
@@ -33,8 +37,8 @@ class BarChartLeaf extends LeafRenderObjectWidget {
 
 /// Renders our BarChart, also handles hitTest.
 class RenderBarChart extends RenderBox {
-  RenderBarChart(
-      BarChartData data, BarChartData targetData, double textScale, BarTouchCallback? touchCallback)
+  RenderBarChart(BarChartData data, BarChartData targetData, double textScale,
+      BarTouchCallback? touchCallback)
       : _data = data,
         _targetData = targetData,
         _textScale = textScale,
@@ -65,6 +69,7 @@ class RenderBarChart extends RenderBox {
   }
 
   BarTouchCallback? _touchCallback;
+  // ignore: avoid_setters_without_getters
   set touchCallback(BarTouchCallback? value) {
     _touchCallback = value;
   }

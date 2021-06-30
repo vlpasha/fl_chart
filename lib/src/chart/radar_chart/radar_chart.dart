@@ -54,7 +54,7 @@ class _RadarChartState extends AnimatedWidgetBaseState<RadarChart> {
   }
 
   @override
-  void forEachTween(visitor) {
+  void forEachTween(dynamic visitor) {
     _radarChartDataTween = visitor(
       _radarChartDataTween,
       widget.data,

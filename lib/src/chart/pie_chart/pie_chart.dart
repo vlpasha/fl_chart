@@ -68,7 +68,7 @@ class _PieChartState extends AnimatedWidgetBaseState<PieChart> {
   }
 
   @override
-  void forEachTween(visitor) {
+  void forEachTween(dynamic visitor) {
     _pieChartDataTween = visitor(
       _pieChartDataTween,
       widget.data,

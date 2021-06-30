@@ -17,9 +17,11 @@ typedef ValueCallback = Future<void> Function(
 class ScopeChartChannelValue {
   final double value;
   final int timestamp;
+  final bool sync;
   ScopeChartChannelValue({
     required this.value,
     required this.timestamp,
+    this.sync = false,
   });
 }
 
@@ -93,9 +95,23 @@ class ScopeChartStaticChannel extends ScopeChartChannel {
 
   ListQueue<FlSpot> get spots => ListQueue.from(
       values.map((item) => FlSpot(item.timestamp.toDouble(), item.value)));
+
+  ListQueue<FlSpot> getSpotsRange(int start, int end) => ListQueue.from(values
+      .where((item) => item.timestamp > start && item.timestamp < end)
+      .map((item) => FlSpot(item.timestamp.toDouble(), item.value)));
+
+  int get minTime => values
+      .reduce((value, element) =>
+          element.timestamp < value.timestamp ? element : value)
+      .timestamp;
+  int get maxTime => values
+      .reduce((value, element) =>
+          element.timestamp > value.timestamp ? element : value)
+      .timestamp;
 }
 
 class ScopeChart extends StatefulWidget {
+  final EdgeInsets padding;
   final int timeWindow;
   final Iterable<ScopeChartChannel> channels;
   final bool realTime;
@@ -106,12 +122,15 @@ class ScopeChart extends StatefulWidget {
   final bool reset;
   final int channelAxisIndex;
   final Stream<bool>? resetStream;
+  final ScopeZoomArea? zoomArea;
   const ScopeChart({
     Key? key,
+    this.padding = const EdgeInsets.all(0),
     this.timeWindow = 1000,
     this.channels = const [],
     this.realTime = true,
     this.timeAxis,
+    this.zoomArea,
     this.borderData,
     this.legendData,
     this.stopped = false,
@@ -161,7 +180,9 @@ class _ScopeChartState extends State<ScopeChart>
     if (_channel == null) {
       channel.cancel();
     } else if (widget.stopped != true) {
-      if (_timeSync != true || event.timestamp <= _startTimestamp) {
+      if (_timeSync != true ||
+          event.timestamp <= _startTimestamp ||
+          event.sync) {
         _channel.spots
             .removeWhere((element) => element.x > event.timestamp.toDouble());
 
@@ -297,114 +318,122 @@ class _ScopeChartState extends State<ScopeChart>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _realTimeScope(BuildContext) {
     final _textScale = MediaQuery.of(context).textScaleFactor;
-    _updateChannels();
 
-    if (widget.realTime) {
-      if (widget.stopped) {
-        _animationController.stop();
-      } else if (!_animationController.isAnimating) {
-        _animationController.repeat();
-      }
+    if (widget.stopped) {
+      _animationController.stop();
+    } else if (!_animationController.isAnimating) {
+      _animationController.repeat();
+    }
 
-      final activeChannelId = widget.channelAxisIndex < widget.channels.length
-          ? widget.channels.elementAt(widget.channelAxisIndex).id
-          : null;
-      final activeChannel =
-          activeChannelId != null ? _channels[activeChannelId] : null;
+    final activeChannelId = widget.channelAxisIndex < widget.channels.length
+        ? widget.channels.elementAt(widget.channelAxisIndex).id
+        : null;
+    final activeChannel =
+        activeChannelId != null ? _channels[activeChannelId] : null;
 
-      return RepaintBoundary(
-          child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (_, __) {
-          var now = 0;
-          if (widget.stopped != true) {
-            _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
+    return RepaintBoundary(
+        child: AnimatedBuilder(
+      animation: _animationController,
+      builder: (_, __) {
+        var now = 0;
+        if (widget.stopped != true) {
+          _elapsedTime = DateTime.now().millisecondsSinceEpoch - _startTime;
+        }
+
+        if (_timeSync != false) {
+          if (_elapsedTime < widget.timeWindow) {
+            now = _startTimestamp;
+          } else {
+            now = _startTimestamp + _elapsedTime - widget.timeWindow;
           }
+        }
 
-          if (_timeSync != false) {
-            if (_elapsedTime < widget.timeWindow) {
-              now = _startTimestamp;
-            } else {
-              now = _startTimestamp + _elapsedTime - widget.timeWindow;
-            }
-          }
-
-          return CustomPaint(
-            isComplex: false,
-            child: widget.legendData != null
-                ? CustomPaint(
-                    painter: RenderScopeLegend(
-                      data: widget.legendData!,
-                      channels: _channels.values,
-                      textScale: _textScale,
-                    ),
-                  )
-                : null,
-            painter: RenderScopeChart(
-              data: ScopeChartData(
-                stopped: widget.stopped,
-                activeChannel: activeChannel,
-                borderData: widget.borderData,
-                timeAxis: _timeAxis.copyWith(
-                  showAxis: widget.timeAxis?.showAxis,
-                  interval: widget.timeAxis?.interval,
-                  grid: widget.timeAxis?.grid,
-                  title: widget.timeAxis?.title,
-                  titles: widget.timeAxis?.titles,
-                  min: now.toDouble(),
-                  max: (now + widget.timeWindow).toDouble(),
-                ),
-                channelsData: _channels.values,
-                clipData: FlClipData.all(),
-              ),
-              textScale: _textScale,
-            ),
-          );
-        },
-      ));
-    } else {
-      final activeChannelId = widget.channelAxisIndex < widget.channels.length
-          ? widget.channels.elementAt(widget.channelAxisIndex).id
-          : null;
-      final activeChannel =
-          activeChannelId != null ? _channels[activeChannelId] : null;
-
-      return RepaintBoundary(
-        child: CustomPaint(
-          isComplex: true,
-          child: widget.legendData != null
-              ? CustomPaint(
-                  painter: RenderScopeLegend(
-                    data: widget.legendData!,
-                    channels: _channels.values,
-                    textScale: _textScale,
-                  ),
+        return CustomPaint(
+          isComplex: false,
+          foregroundPainter: widget.legendData != null
+              ? ScopeLegendRenderer(
+                  data: widget.legendData!,
+                  channels: _channels.values,
+                  textScale: _textScale,
                 )
               : null,
-          painter: RenderScopeChart(
+          painter: ScopeChartRenderer(
             data: ScopeChartData(
               stopped: widget.stopped,
               activeChannel: activeChannel,
               borderData: widget.borderData,
+              zoomArea: widget.zoomArea,
               timeAxis: _timeAxis.copyWith(
                 showAxis: widget.timeAxis?.showAxis,
                 interval: widget.timeAxis?.interval,
                 grid: widget.timeAxis?.grid,
                 title: widget.timeAxis?.title,
                 titles: widget.timeAxis?.titles,
-                min: widget.timeAxis?.min,
-                max: widget.timeAxis?.max,
+                min: now.toDouble(),
+                max: (now + widget.timeWindow).toDouble(),
               ),
               channelsData: _channels.values,
               clipData: FlClipData.all(),
             ),
-            textScale: MediaQuery.of(context).textScaleFactor,
+            textScale: _textScale,
           ),
+        );
+      },
+    ));
+  }
+
+  Widget _staticScope(BuildContext context) {
+    final _textScale = MediaQuery.of(context).textScaleFactor;
+
+    final activeChannelId = widget.channelAxisIndex < widget.channels.length
+        ? widget.channels.elementAt(widget.channelAxisIndex).id
+        : null;
+    final activeChannel =
+        activeChannelId != null ? _channels[activeChannelId] : null;
+
+    return RepaintBoundary(
+      child: CustomPaint(
+        isComplex: true,
+        foregroundPainter: widget.legendData != null
+            ? ScopeLegendRenderer(
+                data: widget.legendData!,
+                channels: _channels.values,
+                textScale: _textScale,
+              )
+            : null,
+        painter: ScopeChartRenderer(
+          data: ScopeChartData(
+            stopped: widget.stopped,
+            activeChannel: activeChannel,
+            borderData: widget.borderData,
+            zoomArea: widget.zoomArea,
+            timeAxis: _timeAxis.copyWith(
+              showAxis: widget.timeAxis?.showAxis,
+              interval: widget.timeAxis?.interval,
+              grid: widget.timeAxis?.grid,
+              title: widget.timeAxis?.title,
+              titles: widget.timeAxis?.titles,
+              min: widget.timeAxis?.min,
+              max: widget.timeAxis?.max,
+            ),
+            channelsData: _channels.values,
+            clipData: FlClipData.all(),
+          ),
+          textScale: MediaQuery.of(context).textScaleFactor,
         ),
-      );
-    }
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _updateChannels();
+
+    return Padding(
+      padding: widget.padding,
+      child: widget.realTime ? _realTimeScope(context) : _staticScope(context),
+    );
   }
 }

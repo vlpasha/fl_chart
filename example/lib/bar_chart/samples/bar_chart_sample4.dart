@@ -34,7 +34,7 @@ class BarChartSample4State extends State<BarChartSample4> {
                   textStyle:
                       const TextStyle(color: Color(0xff939393), fontSize: 10),
                   margin: 10,
-                  getTitles: (double value) {
+                  getTitles: (value) {
                     switch (value.toInt()) {
                       case 0:
                         return 'Apr';
