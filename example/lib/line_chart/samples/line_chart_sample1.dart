@@ -169,7 +169,7 @@ class LineChartSample1 extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.max,
           children: [
-            Expanded(child: DynamicScopeSample()),
+            // Expanded(child: DynamicScopeSample()),
             Expanded(child: StaticScopeSample()),
           ]);
 }
@@ -240,6 +240,16 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
       ),
+      ScopeChartDynamicChannel(
+        id: '3',
+        show: true,
+        color: Colors.blue,
+        valuesStream: _streams[3].stream,
+        axis: const ScopeAxis(
+          title: ScopeAxisTitle(showTitle: true, titleText: 'zero'),
+          titles: ScopeAxisTitles(reservedSize: 50),
+        ),
+      ),
     ];
 
     _timer = Timer.periodic(Duration(milliseconds: timeStep), (timer) {
@@ -291,50 +301,26 @@ class StaticScopeSample extends StatefulWidget {
 }
 
 class _StaticScopeSampleState extends State<StaticScopeSample> {
-  final int _min = 0;
-  final int _max = 10000000;
+  int _min;
+  int _max;
   final int _timeWindow = 10000;
   int axisIndex = 0;
   List<ScopeChartStaticChannel> _channels;
 
-  List<ScopeChartChannelValue> _cos(int count, double phase) {
-    var radians = 0.0;
+  List<ScopeChartChannelValue> _generateValues(
+      int count, double min, double max, int startTime, int step) {
     var values = <ScopeChartChannelValue>[];
+    var timestamp = startTime;
+    final _random = Random();
     for (var i = 0; i < count; i++) {
+      final coef = _random.nextDouble();
+      final mul = _random.nextInt(max.toInt().abs());
+      final delta = (coef * max > 0 ? mul : -mul);
       values.add(ScopeChartChannelValue(
-        timestamp: Duration(seconds: i).inMilliseconds,
-        value: cos(radians * pi + phase),
+        timestamp: timestamp,
+        value: (min + delta).clamp(min, max),
       ));
-      radians += 0.05;
-      if (radians > 2.0) radians = 0;
-    }
-    return values;
-  }
-
-  List<ScopeChartChannelValue> _sin(int count, double phase) {
-    var radians = 0.0;
-    var values = <ScopeChartChannelValue>[];
-    for (var i = 0; i < count; i++) {
-      values.add(ScopeChartChannelValue(
-        timestamp: Duration(seconds: i).inMilliseconds,
-        value: sin(radians * pi + phase),
-      ));
-      radians += 0.05;
-      if (radians > 2.0) radians = 0;
-    }
-    return values;
-  }
-
-  List<ScopeChartChannelValue> _linear(int count) {
-    var radians = 0.0;
-    var values = <ScopeChartChannelValue>[];
-    for (var i = 0; i < count; i++) {
-      values.add(ScopeChartChannelValue(
-        timestamp: Duration(seconds: i).inMilliseconds,
-        value: i.toDouble(),
-      ));
-      radians += 0.05;
-      if (radians > 2.0) radians = 0;
+      timestamp += step;
     }
     return values;
   }
@@ -342,35 +328,42 @@ class _StaticScopeSampleState extends State<StaticScopeSample> {
   @override
   void initState() {
     super.initState();
-    _channels = [
-      ScopeChartStaticChannel(
-        id: 'sin',
+    final _random = Random();
+    final startTime = DateTime.now().millisecondsSinceEpoch;
+    final endTime = startTime + const Duration(hours: 24).inMilliseconds;
+    final count = (endTime - startTime) ~/ 10;
+    _min = startTime;
+    _max = endTime;
+    _channels = [];
+    const baseColor = Color(0xFFFFFFFF);
+    for (var i = 0; i < 1; i++) {
+      final min = (1 - _random.nextDouble() * 2) * _random.nextInt(1000);
+      final max = min + _random.nextDouble() * _random.nextInt(1000);
+      _channels.add(ScopeChartStaticChannel(
+        id: 'Channel $i',
         color: Colors.red,
-        values: _sin(_max ~/ 1000, 0),
-        axis: const ScopeAxis(
-          title: ScopeAxisTitle(showTitle: true, titleText: 'sin'),
-          titles: ScopeAxisTitles(reservedSize: 10),
+        values: _generateValues(count, min, max, startTime, 10),
+        axis: ScopeAxis(
+          grid: ScopeGrid(
+            getDrawingLine: (_) => FlLine(
+              color: baseColor.withOpacity(0.2),
+              strokeWidth: 0.5,
+            ),
+          ),
+          title: ScopeAxisTitle(
+            showTitle: true,
+            colorize: true,
+            titleText: 'Channel $i',
+          ),
+          titles: const ScopeAxisTitles(
+            colorize: true,
+            reservedSize: 20,
+          ),
+          min: min,
+          max: max,
         ),
-      ),
-      ScopeChartStaticChannel(
-        id: 'cos',
-        color: Colors.green,
-        values: _cos(_max ~/ 1000, 0),
-        axis: const ScopeAxis(
-          title: ScopeAxisTitle(showTitle: true, titleText: 'cos'),
-          titles: ScopeAxisTitles(reservedSize: 10),
-        ),
-      ),
-      ScopeChartStaticChannel(
-        id: 'line',
-        color: Colors.green,
-        values: _linear(_max ~/ 1000),
-        axis: const ScopeAxis(
-          title: ScopeAxisTitle(showTitle: true, titleText: 'line'),
-          titles: ScopeAxisTitles(reservedSize: 10),
-        ),
-      ),
-    ];
+      ));
+    }
   }
 
   @override

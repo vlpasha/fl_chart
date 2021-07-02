@@ -487,19 +487,35 @@ class ScopeChartPainter {
   }) {
     final clipRect = _getClipRect(canvasWrapper, holder);
     final path = appendToPath ?? Path();
+    final ScopeChartData data = holder.data;
     final spots = channelData.spots;
+
+    final iterator = spots.iterator;
+    var curSpot = iterator.moveNext() ? iterator.current : null;
+    var nextSpot = iterator.moveNext() ? iterator.current : curSpot;
+    while (curSpot != null &&
+        nextSpot != null &&
+        curSpot.x < data.minX &&
+        nextSpot.x < data.minX) {
+      curSpot = nextSpot;
+      nextSpot = iterator.moveNext() ? iterator.current : null;
+    }
+
+    if (curSpot == null) {
+      return path;
+    }
 
     var start = _clipXY(
         clipRect,
         _getPixelX(
-          spots.first.x,
+          curSpot.x,
           scopeData.minX,
           scopeData.maxX,
           clipRect.size,
           holder,
         ),
         _getPixelY(
-          spots.first.y,
+          curSpot.y,
           channelData.minY,
           channelData.maxY,
           clipRect.size,
@@ -512,14 +528,11 @@ class ScopeChartPainter {
       path.lineTo(start.dx, start.dy);
     }
 
-    var skippedCount = 0;
-    final iterator = spots.iterator;
-    var curSpot = iterator.moveNext() ? iterator.current : null;
-    var nextSpot = iterator.moveNext() ? iterator.current : curSpot;
-    while (curSpot != null && nextSpot != null) {
-      /// CurrentSpot
-      final current = _clipXY(
-        clipRect,
+    Offset? prevCoords;
+    double? minY;
+    double? maxY;
+    while (curSpot != null && nextSpot != null && curSpot.x < data.maxX) {
+      final currentCoords = Offset(
         _getPixelX(
           curSpot.x,
           scopeData.minX,
@@ -536,8 +549,7 @@ class ScopeChartPainter {
         ),
       );
 
-      final next = _clipXY(
-        clipRect,
+      final nextCoords = Offset(
         _getPixelX(
           nextSpot.x,
           scopeData.minX,
@@ -554,13 +566,33 @@ class ScopeChartPainter {
         ),
       );
 
-      // if (current.dy.round() == next.dy.round() &&
-      //     current.dx.round() == next.dx.round()) {
-      //   curSpot = nextSpot;
-      //   nextSpot = iterator.moveNext() ? iterator.current : null;
-      //   skippedCount++;
-      //   continue;
-      // }
+      if (prevCoords != null &&
+          prevCoords.dx.round() == nextCoords.dx.round()) {
+        if (maxY == null || nextCoords.dy > maxY) {
+          maxY = nextCoords.dy;
+        }
+        if (minY == null || nextCoords.dy < minY) {
+          minY = nextCoords.dy;
+        }
+
+        prevCoords = currentCoords;
+        curSpot = nextSpot;
+        nextSpot = iterator.moveNext() ? iterator.current : null;
+        continue;
+      }
+
+      /// CurrentSpot
+      final current = _clipXY(clipRect, currentCoords.dx, currentCoords.dy);
+
+      /// Next Spot
+      final next = _clipXY(clipRect, nextCoords.dx, nextCoords.dy);
+
+      if (minY != null && maxY != null) {
+        path.lineTo(next.dx, minY);
+        path.lineTo(next.dx, maxY);
+        minY = null;
+        maxY = null;
+      }
 
       if (current.dy == next.dy) {
         path.lineTo(next.dx, next.dy);
@@ -569,6 +601,7 @@ class ScopeChartPainter {
         path.lineTo(next.dx, next.dy);
       }
 
+      prevCoords = currentCoords;
       curSpot = nextSpot;
       nextSpot = iterator.moveNext() ? iterator.current : null;
     }

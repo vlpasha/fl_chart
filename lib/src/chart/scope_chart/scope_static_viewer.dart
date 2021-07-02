@@ -344,9 +344,6 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
           onHorizontalDragStart: _onHorizontalDragStart,
           onHorizontalDragUpdate: _onHorizontalDragUpdate,
           onHorizontalDragEnd: _onHorizontalDragEnd,
-          // onVerticalDragStart: _onVerticalDragStart,
-          // onVerticalDragUpdate: _onVerticalDragUpdate,
-          // onVerticalDragEnd: _onVerticalDragEnd,
           child: Stack(fit: StackFit.expand, children: [
             ScopeChart(
               padding: const EdgeInsets.fromLTRB(16, 4, 4, 6),

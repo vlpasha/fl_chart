@@ -318,7 +318,7 @@ class _ScopeChartState extends State<ScopeChart>
     super.dispose();
   }
 
-  Widget _realTimeScope(BuildContext) {
+  Widget _realTimeScope(context) {
     final _textScale = MediaQuery.of(context).textScaleFactor;
 
     if (widget.stopped) {

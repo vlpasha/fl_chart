@@ -10,7 +10,7 @@ import 'scope_chart.dart';
 import 'scope_chart_data.dart';
 
 class ScopeDynamicViewer extends StatefulWidget {
-  ScopeDynamicViewer({
+  const ScopeDynamicViewer({
     Key? key,
     this.timeWindow = 10000,
     this.channels = const [],
