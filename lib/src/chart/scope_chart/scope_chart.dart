@@ -3,9 +3,17 @@ import 'dart:collection';
 
 import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fl_chart/src/chart/base/axis_chart/axis_chart_data.dart';
 
+import 'common/scope_axis.dart';
+import 'common/scope_border.dart';
+import 'common/scope_channel.dart';
+import 'common/scope_cursor.dart';
+import 'common/scope_legend.dart';
+import 'common/scope_zoom_area.dart';
 import 'scope_chart_data.dart';
 import 'scope_chart_renderer.dart';
 
@@ -30,16 +38,16 @@ abstract class ScopeChartChannel {
   final bool show;
   final Color color;
   final double width;
-  final ScopeAxis axis;
+  final ScopeAxisData axis;
   ScopeChartChannel({
     required this.id,
     required this.color,
     double? width,
     bool? show,
-    ScopeAxis? axis,
+    ScopeAxisData? axis,
   })  : width = width ?? 2.0,
         show = show ?? true,
-        axis = axis ?? const ScopeAxis();
+        axis = axis ?? const ScopeAxisData();
 }
 
 class ScopeChartDynamicChannel extends ScopeChartChannel {
@@ -52,7 +60,7 @@ class ScopeChartDynamicChannel extends ScopeChartChannel {
     required this.valuesStream,
     double? width,
     bool? show,
-    ScopeAxis? axis,
+    ScopeAxisData? axis,
   }) : super(
           color: color,
           id: id,
@@ -84,7 +92,7 @@ class ScopeChartStaticChannel extends ScopeChartChannel {
     required this.values,
     double? width,
     bool? show,
-    ScopeAxis? axis,
+    ScopeAxisData? axis,
   }) : super(
           color: color,
           id: id,
@@ -111,32 +119,63 @@ class ScopeChartStaticChannel extends ScopeChartChannel {
 }
 
 class ScopeChart extends StatefulWidget {
+  final GlobalKey? painterKey;
   final EdgeInsets padding;
   final int timeWindow;
   final Iterable<ScopeChartChannel> channels;
   final bool realTime;
-  final ScopeAxis? timeAxis;
+  final ScopeAxisData? timeAxis;
   final ScopeBorderData? borderData;
   final ScopeLegendData? legendData;
+  final ScopeCursorData? cursorData;
+  final ScopeZoomAreaData? zoomAreaData;
+  final double? cursorValue;
+
   final bool stopped;
   final bool reset;
   final int channelAxisIndex;
   final Stream<bool>? resetStream;
-  final ScopeZoomArea? zoomArea;
+
+  final ScopeGestureCallback? onGestureStart;
+  final ScopeGestureCallback? onGestureUpdate;
+  final ScopeGestureCallback? onGestureEnd;
+
+  final ScopeGestureCallback? onMouseScroll;
+  final ScopeGestureCallback? onTap;
+  final ScopeGestureCallback? onScaleStart;
+  final ScopeGestureCallback? onScaleUpdate;
+  final ScopeGestureCallback? onScaleEnd;
+  final ScopeGestureCallback? onHorizontalDragStart;
+  final ScopeGestureCallback? onHorizontalDragUpdate;
+  final ScopeGestureCallback? onHorizontalDragEnd;
   const ScopeChart({
     Key? key,
+    this.painterKey,
     this.padding = const EdgeInsets.all(0),
     this.timeWindow = 1000,
     this.channels = const [],
     this.realTime = true,
     this.timeAxis,
-    this.zoomArea,
+    this.zoomAreaData,
+    this.cursorData,
     this.borderData,
     this.legendData,
     this.stopped = false,
     this.channelAxisIndex = 0,
+    this.cursorValue,
     this.reset = false,
     this.resetStream,
+    this.onGestureStart,
+    this.onGestureUpdate,
+    this.onGestureEnd,
+    this.onTap,
+    this.onMouseScroll,
+    this.onScaleStart,
+    this.onScaleUpdate,
+    this.onScaleEnd,
+    this.onHorizontalDragStart,
+    this.onHorizontalDragUpdate,
+    this.onHorizontalDragEnd,
   }) : super(key: key);
   @override
   State<ScopeChart> createState() => _ScopeChartState();
@@ -150,10 +189,11 @@ class _ScopeChartState extends State<ScopeChart>
   int _startTime = 0;
   int _elapsedTime = 0;
   int _startTimestamp = 0;
+  ScopePointerEvent? _lastEvent;
 
-  final _timeAxis = ScopeAxis(
+  final _timeAxis = ScopeAxisData(
     interval: 1000,
-    grid: const ScopeGrid(),
+    grid: const ScopeAxisGrid(),
     title: const ScopeAxisTitle(showTitle: false, titleText: 'Bottom Title'),
     titles: ScopeAxisTitles(
       showTitles: true,
@@ -350,34 +390,23 @@ class _ScopeChartState extends State<ScopeChart>
           }
         }
 
-        return CustomPaint(
-          isComplex: false,
-          foregroundPainter: widget.legendData != null
-              ? ScopeLegendRenderer(
-                  data: widget.legendData!,
-                  channels: _channels.values,
-                  textScale: _textScale,
-                )
-              : null,
-          painter: ScopeChartRenderer(
-            data: ScopeChartData(
-              stopped: widget.stopped,
-              activeChannel: activeChannel,
-              borderData: widget.borderData,
-              zoomArea: widget.zoomArea,
-              timeAxis: _timeAxis.copyWith(
-                showAxis: widget.timeAxis?.showAxis,
-                interval: widget.timeAxis?.interval,
-                grid: widget.timeAxis?.grid,
-                title: widget.timeAxis?.title,
-                titles: widget.timeAxis?.titles,
-                min: now.toDouble(),
-                max: (now + widget.timeWindow).toDouble(),
-              ),
-              channelsData: _channels.values,
-              clipData: FlClipData.all(),
+        return ScopeChartLeaf(
+          data: ScopeChartData(
+            stopped: widget.stopped,
+            activeChannel: activeChannel,
+            borderData: widget.borderData,
+            zoomAreaData: widget.zoomAreaData,
+            timeAxis: _timeAxis.copyWith(
+              showAxis: widget.timeAxis?.showAxis,
+              interval: widget.timeAxis?.interval,
+              grid: widget.timeAxis?.grid,
+              title: widget.timeAxis?.title,
+              titles: widget.timeAxis?.titles,
+              min: now.toDouble(),
+              max: (now + widget.timeWindow).toDouble(),
             ),
-            textScale: _textScale,
+            channelsData: _channels.values,
+            clipData: FlClipData.all(),
           ),
         );
       },
@@ -385,8 +414,6 @@ class _ScopeChartState extends State<ScopeChart>
   }
 
   Widget _staticScope(BuildContext context) {
-    final _textScale = MediaQuery.of(context).textScaleFactor;
-
     final activeChannelId = widget.channelAxisIndex < widget.channels.length
         ? widget.channels.elementAt(widget.channelAxisIndex).id
         : null;
@@ -394,34 +421,30 @@ class _ScopeChartState extends State<ScopeChart>
         activeChannelId != null ? _channels[activeChannelId] : null;
 
     return RepaintBoundary(
-      child: CustomPaint(
-        isComplex: true,
-        foregroundPainter: widget.legendData != null
-            ? ScopeLegendRenderer(
-                data: widget.legendData!,
-                channels: _channels.values,
-                textScale: _textScale,
-              )
+      child: ScopeChartLeaf(
+        onMouseScroll: widget.onMouseScroll != null
+            ? (event) => widget.onMouseScroll!(pointerEvent: event)
             : null,
-        painter: ScopeChartRenderer(
-          data: ScopeChartData(
-            stopped: widget.stopped,
-            activeChannel: activeChannel,
-            borderData: widget.borderData,
-            zoomArea: widget.zoomArea,
-            timeAxis: _timeAxis.copyWith(
-              showAxis: widget.timeAxis?.showAxis,
-              interval: widget.timeAxis?.interval,
-              grid: widget.timeAxis?.grid,
-              title: widget.timeAxis?.title,
-              titles: widget.timeAxis?.titles,
-              min: widget.timeAxis?.min,
-              max: widget.timeAxis?.max,
-            ),
-            channelsData: _channels.values,
-            clipData: FlClipData.all(),
+        onPointerUp: (event) {},
+        onPointerDown: (event) => _lastEvent = event,
+        data: ScopeChartData(
+          stopped: widget.stopped,
+          activeChannel: activeChannel,
+          borderData: widget.borderData,
+          zoomAreaData: widget.zoomAreaData,
+          timeAxis: _timeAxis.copyWith(
+            showAxis: widget.timeAxis?.showAxis,
+            interval: widget.timeAxis?.interval,
+            grid: widget.timeAxis?.grid,
+            title: widget.timeAxis?.title,
+            titles: widget.timeAxis?.titles,
+            min: widget.timeAxis?.min,
+            max: widget.timeAxis?.max,
           ),
-          textScale: MediaQuery.of(context).textScaleFactor,
+          channelsData: _channels.values,
+          clipData: FlClipData.all(),
+          cursorData: widget.cursorData,
+          cursorValue: widget.cursorValue,
         ),
       ),
     );
@@ -431,9 +454,48 @@ class _ScopeChartState extends State<ScopeChart>
   Widget build(BuildContext context) {
     _updateChannels();
 
-    return Padding(
-      padding: widget.padding,
-      child: widget.realTime ? _realTimeScope(context) : _staticScope(context),
-    );
+    return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        dragStartBehavior: DragStartBehavior.start,
+        onTap: widget.onTap != null
+            ? () {
+                widget.onTap!(pointerEvent: _lastEvent);
+                _lastEvent = null;
+              }
+            : () => _lastEvent = null,
+        onScaleStart: widget.onScaleStart != null
+            ? (details) =>
+                widget.onScaleStart!(pointerEvent: _lastEvent, details: details)
+            : null,
+        onScaleUpdate: widget.onScaleUpdate != null
+            ? (details) => widget.onScaleUpdate!(
+                pointerEvent: _lastEvent, details: details)
+            : null,
+        onScaleEnd: widget.onScaleEnd != null
+            ? (details) {
+                widget.onScaleEnd!(pointerEvent: _lastEvent, details: details);
+                _lastEvent = null;
+              }
+            : (_) => _lastEvent = null,
+        onHorizontalDragStart: widget.onHorizontalDragStart != null
+            ? (details) => widget.onHorizontalDragStart!(
+                pointerEvent: _lastEvent, details: details)
+            : null,
+        onHorizontalDragUpdate: widget.onHorizontalDragUpdate != null
+            ? (details) => widget.onHorizontalDragUpdate!(
+                pointerEvent: _lastEvent, details: details)
+            : null,
+        onHorizontalDragEnd: widget.onHorizontalDragEnd != null
+            ? (details) {
+                widget.onHorizontalDragEnd!(
+                    pointerEvent: _lastEvent, details: details);
+                _lastEvent = null;
+              }
+            : (_) => _lastEvent = null,
+        child: Padding(
+          padding: widget.padding,
+          child:
+              widget.realTime ? _realTimeScope(context) : _staticScope(context),
+        ));
   }
 }

@@ -205,7 +205,7 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
         show: true,
         color: Colors.red,
         valuesStream: _streams[0].stream,
-        axis: const ScopeAxis(
+        axis: const ScopeAxisData(
           title: ScopeAxisTitle(showTitle: true, titleText: 'sin'),
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
@@ -215,7 +215,7 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
         show: true,
         color: Colors.green,
         valuesStream: _streams[1].stream,
-        axis: const ScopeAxis(
+        axis: const ScopeAxisData(
           title: ScopeAxisTitle(showTitle: true, titleText: 'atan'),
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
@@ -225,7 +225,7 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
         show: true,
         color: Colors.blue,
         valuesStream: _streams[2].stream,
-        axis: const ScopeAxis(
+        axis: const ScopeAxisData(
           title: ScopeAxisTitle(showTitle: true, titleText: 'cos'),
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
@@ -235,7 +235,7 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
         show: true,
         color: Colors.blue,
         valuesStream: _streams[3].stream,
-        axis: const ScopeAxis(
+        axis: const ScopeAxisData(
           title: ScopeAxisTitle(showTitle: true, titleText: 'zero'),
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
@@ -245,7 +245,7 @@ class _DynamicScopeSampleState extends State<DynamicScopeSample> {
         show: true,
         color: Colors.blue,
         valuesStream: _streams[3].stream,
-        axis: const ScopeAxis(
+        axis: const ScopeAxisData(
           title: ScopeAxisTitle(showTitle: true, titleText: 'zero'),
           titles: ScopeAxisTitles(reservedSize: 50),
         ),
@@ -335,7 +335,7 @@ class _StaticScopeSampleState extends State<StaticScopeSample> {
     _min = startTime;
     _max = endTime;
     _channels = [];
-    const baseColor = Color(0xFFFFFFFF);
+    const baseColor = Color(0xFF00000);
     for (var i = 0; i < 1; i++) {
       final min = (1 - _random.nextDouble() * 2) * _random.nextInt(1000);
       final max = min + _random.nextDouble() * _random.nextInt(1000);
@@ -343,8 +343,9 @@ class _StaticScopeSampleState extends State<StaticScopeSample> {
         id: 'Channel $i',
         color: Colors.red,
         values: _generateValues(count, min, max, startTime, 10),
-        axis: ScopeAxis(
-          grid: ScopeGrid(
+        axis: ScopeAxisData(
+          grid: ScopeAxisGrid(
+            showGrid: true,
             getDrawingLine: (_) => FlLine(
               color: baseColor.withOpacity(0.2),
               strokeWidth: 0.5,
@@ -372,6 +373,22 @@ class _StaticScopeSampleState extends State<StaticScopeSample> {
         timeEnd: _max,
         timeWindow: _timeWindow,
         channels: _channels,
+        zoomAreaData: ScopeZoomAreaData(
+          min: _min.toDouble(),
+          max: _max.toDouble(),
+          maxZoom: 10000,
+          minZoom: 1000,
+          minWidth: 1,
+          show: true,
+          height: 40,
+          backgroundColor:
+              Theme.of(context).colorScheme.primary.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.primary,
+          cursor:
+              const ScopeCursorData(color: Colors.red, show: true, width: 1),
+        ),
+        cursorData:
+            const ScopeCursorData(color: Colors.black, show: true, width: 2),
         panEnabled: true,
         scaleEnabled: true,
       );

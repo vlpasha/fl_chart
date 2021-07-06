@@ -14,5 +14,6 @@ export 'src/chart/scatter_chart/scatter_chart.dart';
 export 'src/chart/scatter_chart/scatter_chart_data.dart';
 export 'src/chart/scope_chart/scope_chart.dart';
 export 'src/chart/scope_chart/scope_chart_data.dart';
+export 'src/chart/scope_chart/common/scope_common.dart';
 export 'src/chart/scope_chart/scope_dynamic_viewer.dart';
 export 'src/chart/scope_chart/scope_static_viewer.dart';

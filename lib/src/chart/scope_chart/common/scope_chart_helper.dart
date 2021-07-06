@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'scope_chart_data.dart';
+import 'scope_channel.dart';
 
 /// Contains anything that helps LineChart works
 class ScopeChartHelper {

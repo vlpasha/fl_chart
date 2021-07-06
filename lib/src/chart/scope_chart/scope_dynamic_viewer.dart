@@ -6,6 +6,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'common/scope_axis.dart';
+import 'common/scope_border.dart';
+import 'common/scope_legend.dart';
 import 'scope_chart.dart';
 import 'scope_chart_data.dart';
 
@@ -27,7 +30,7 @@ class ScopeDynamicViewer extends StatefulWidget {
   final Iterable<ScopeChartChannel> channels;
   final ScopeBorderData? borderData;
   final ScopeLegendData? legendData;
-  final ScopeAxis? timeAxis;
+  final ScopeAxisData? timeAxis;
   final Stream<bool>? resetStream;
   final bool stopped;
   final bool reset;
