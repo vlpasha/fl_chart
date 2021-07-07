@@ -387,8 +387,12 @@ class _StaticScopeSampleState extends State<StaticScopeSample> {
           cursor:
               const ScopeCursorData(color: Colors.red, show: true, width: 1),
         ),
-        cursorData:
-            const ScopeCursorData(color: Colors.black, show: true, width: 2),
+        cursorData: const ScopeCursorData(
+          color: Colors.black,
+          show: true,
+          width: 2,
+          titlePosition: CursorTitlePosition.top,
+        ),
         panEnabled: true,
         scaleEnabled: true,
       );

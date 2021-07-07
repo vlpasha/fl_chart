@@ -184,7 +184,7 @@ class ScopeChart extends StatefulWidget {
 class _ScopeChartState extends State<ScopeChart>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-
+  Iterable<ScopeChartChannel>? _channelsRef;
   StreamSubscription<bool>? _resetSyncSubscr;
   int _startTime = 0;
   int _elapsedTime = 0;
@@ -326,6 +326,8 @@ class _ScopeChartState extends State<ScopeChart>
       }
     }
 
+    _channelsRef = widget.channels;
+
     _resetSyncSubscr?.cancel();
     _resetSyncSubscr = widget.resetStream?.listen(
       (event) => setState(
@@ -348,11 +350,14 @@ class _ScopeChartState extends State<ScopeChart>
 
   @override
   void dispose() {
-    for (var channel in widget.channels) {
-      if (channel is ScopeChartDynamicChannel) {
-        channel.cancel();
+    if (_channelsRef != null) {
+      for (var channel in _channelsRef!) {
+        if (channel is ScopeChartDynamicChannel) {
+          channel.cancel();
+        }
       }
     }
+
     _animationController.dispose();
     _resetSyncSubscr?.cancel();
     super.dispose();

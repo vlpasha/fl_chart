@@ -87,8 +87,6 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
   ScopePointerEventTarget? _gestureTarget;
   _GestureType? _gestureType;
 
-  final GlobalKey _childKey = GlobalKey();
-
   static const double _kDrag = 0.0000135;
   static const double _kTime = 0.5;
 
@@ -447,7 +445,6 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
           onHorizontalDragUpdate: _onHorizontalDragUpdate,
           onHorizontalDragEnd: _onHorizontalDragEnd,
           padding: const EdgeInsets.fromLTRB(16, 4, 4, 6),
-          key: _childKey,
           channels: widget.channels,
           realTime: false,
           timeAxis: ScopeAxisData(

@@ -75,6 +75,12 @@ class ScopeChartDmensions {
     var sum = 0.0;
     final horizontalAxis = data.timeAxis;
     final zoomArea = data.zoomAreaData;
+    final cursor = data.cursorData;
+
+    if (cursor.show && cursor.titlePosition == CursorTitlePosition.top) {
+      sum += cursor.reservedSize;
+    }
+
     if (zoomArea != null && zoomArea.show) {
       sum += zoomArea.height;
     }
@@ -93,7 +99,7 @@ class ScopeChartDmensions {
     return sum;
   }
 
-  double _getExtraNeededHorizontalSpace(ScopePaintHolder holder) {
+  double _getExtraNeededLeftSpace(ScopePaintHolder holder) {
     ScopeChartData data = holder.data;
     var sum = 0.0;
 
@@ -114,8 +120,20 @@ class ScopeChartDmensions {
     return sum;
   }
 
+  double _getExtraNeededTopSpace(ScopePaintHolder holder) {
+    ScopeChartData data = holder.data;
+    var sum = 0.0;
+    final cursor = data.cursorData;
+
+    if (cursor.show && cursor.titlePosition == CursorTitlePosition.top) {
+      sum += cursor.reservedSize;
+    }
+
+    return sum;
+  }
+
   Size _getChartUsableDrawSize(Size viewSize, ScopePaintHolder holder) {
-    final usableWidth = viewSize.width - _getExtraNeededHorizontalSpace(holder);
+    final usableWidth = viewSize.width - _getExtraNeededLeftSpace(holder);
     final usableHeight = viewSize.height - _getExtraNeededVerticalSpace(holder);
     return Size(usableWidth, usableHeight);
   }
@@ -124,10 +142,11 @@ class ScopeChartDmensions {
     ScopeChartData data = holder.data;
     final size = canvasRect.size;
     final usableSize = _getChartUsableDrawSize(size, holder);
-    final _leftOffset = _getExtraNeededHorizontalSpace(holder);
+    final leftOffset = _getExtraNeededLeftSpace(holder);
+    final topOffset = _getExtraNeededTopSpace(holder);
     final border = data.borderData.showBorder ? data.borderData.border : null;
-    var left = _leftOffset - (border?.left.width ?? 0) / 2;
-    var top = -(border?.top.width ?? 0) / 2;
+    var left = leftOffset - (border?.left.width ?? 0) / 2;
+    var top = topOffset - (border?.top.width ?? 0) / 2;
     var right = left + usableSize.width + (border?.right.width ?? 0) / 2;
     var bottom = usableSize.height + (border?.bottom.width ?? 0) / 2;
 
@@ -455,8 +474,12 @@ class ScopeChartPainter {
             );
             final x1 = _dimensions.chartRect.left;
             final x2 = _dimensions.chartRect.right;
-            canvasWrapper.drawDashedLine(Offset(x1, bothY), Offset(x2, bothY),
-                _strokePainter, flLine.dashArray);
+            canvasWrapper.drawDashedLine(
+              Offset(x1, bothY),
+              Offset(x2, bothY),
+              _strokePainter,
+              flLine.dashArray,
+            );
           }
           if (titles.showTitles != false) {
             final span = TextSpan(
@@ -551,12 +574,12 @@ class ScopeChartPainter {
       Rect? lastTitleRect;
       Rect? cursorRect;
 
-      if (data.cursorData.show && data.cursorValue != null) {
+      final cursor = data.cursorData;
+      if (cursor.show && data.cursorValue != null) {
         var x = _getPixelX(data.cursorValue!, data.minX, data.maxX, holder)
             .clamp(_dimensions.chartRect.left, _dimensions.chartRect.right);
-        var y = _dimensions.chartRect.bottom;
         final span = TextSpan(
-            style: titles.textStyle, text: titles.getTitles(horizontalSeek));
+            style: cursor.textStyle, text: titles.getTitles(data.cursorValue!));
         final tp = TextPainter(
           text: span,
           textAlign: TextAlign.center,
@@ -565,20 +588,38 @@ class ScopeChartPainter {
         );
         tp.layout();
         final textWidth = tp.width + titles.padding;
-        canvasWrapper.drawLine(
-            Offset(x, y), Offset(x, y + titles.margin / 2), _strokePainter);
+        if (cursor.titlePosition == CursorTitlePosition.bottom) {
+          var y = _dimensions.chartRect.bottom;
+          canvasWrapper.drawLine(
+              Offset(x, y), Offset(x, y + titles.margin / 2), _strokePainter);
+          x -= textWidth / 2;
+          y += titles.margin;
+          cursorRect = Rect.fromLTWH(x, y, textWidth, tp.height);
 
-        x -= textWidth / 2;
-        y += titles.margin;
-        cursorRect = Rect.fromLTWH(x, y, textWidth, tp.height);
+          canvasWrapper.save();
+          canvasWrapper.translate(x + textWidth / 2, y + tp.height / 2);
+          canvasWrapper.rotate(utils.radians(titles.rotateAngle));
+          canvasWrapper.translate(-(x + textWidth / 2), -(y + tp.height / 2));
+          x += utils.translateRotatedPosition(textWidth, titles.rotateAngle);
+          canvasWrapper.drawText(tp, Offset(x, y));
+          canvasWrapper.restore();
+        }
+        if (cursor.titlePosition == CursorTitlePosition.top) {
+          var y = _dimensions.chartRect.top;
+          canvasWrapper.drawLine(
+              Offset(x, y), Offset(x, y - titles.margin / 2), _strokePainter);
+          x -= textWidth / 2;
+          y -= titles.margin + tp.height;
+          cursorRect = Rect.fromLTWH(x, y, textWidth, tp.height);
 
-        canvasWrapper.save();
-        canvasWrapper.translate(x + textWidth / 2, y + tp.height / 2);
-        canvasWrapper.rotate(utils.radians(titles.rotateAngle));
-        canvasWrapper.translate(-(x + textWidth / 2), -(y + tp.height / 2));
-        x += utils.translateRotatedPosition(textWidth, titles.rotateAngle);
-        canvasWrapper.drawText(tp, Offset(x, y));
-        canvasWrapper.restore();
+          canvasWrapper.save();
+          canvasWrapper.translate(x + textWidth / 2, y - tp.height / 2);
+          canvasWrapper.rotate(utils.radians(titles.rotateAngle));
+          canvasWrapper.translate(-(x + textWidth / 2), -(y - tp.height / 2));
+          x += utils.translateRotatedPosition(textWidth, titles.rotateAngle);
+          canvasWrapper.drawText(tp, Offset(x, y));
+          canvasWrapper.restore();
+        }
       }
 
       while (horizontalSeek <= end) {
@@ -595,8 +636,8 @@ class ScopeChartPainter {
             holder,
           );
           canvasWrapper.drawDashedLine(
-            Offset(bothX, 0.0),
-            Offset(bothX, _dimensions.chartRect.height),
+            Offset(bothX, _dimensions.chartRect.top),
+            Offset(bothX, _dimensions.chartRect.bottom),
             _strokePainter,
             flLineStyle.dashArray,
           );
