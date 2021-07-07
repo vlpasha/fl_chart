@@ -105,6 +105,7 @@ class ScopeChartLeafRenderer extends RenderBox {
       onMouseScroll!(ScopePointerEvent(
         event: event,
         target: target,
+        viewRect: _painter.viewRect,
         chartRect: _painter.chartRect,
         zoomRect: _painter.zoomRect,
       ));
@@ -113,6 +114,7 @@ class ScopeChartLeafRenderer extends RenderBox {
       onPointerDown!(ScopePointerEvent(
         event: event,
         target: target,
+        viewRect: _painter.viewRect,
         chartRect: _painter.chartRect,
         zoomRect: _painter.zoomRect,
       ));
@@ -121,6 +123,7 @@ class ScopeChartLeafRenderer extends RenderBox {
       onPointerUp!(ScopePointerEvent(
         event: event,
         target: target,
+        viewRect: _painter.viewRect,
         chartRect: _painter.chartRect,
         zoomRect: _painter.zoomRect,
       ));

@@ -185,6 +185,7 @@ class ScopeChartPainter {
     _fillPainter = Paint()..style = PaintingStyle.fill;
   }
 
+  Rect get viewRect => _dimensions.canvasRect;
   Rect get chartRect => _dimensions.chartRect;
   Rect? get zoomRect => _dimensions.zoomRect;
   Rect? get verticalAxisRect => _dimensions.verticalAxisRect;
@@ -437,7 +438,7 @@ class ScopeChartPainter {
         final end = lastPositionOverlapsWithBorder
             ? (channel.maxY - interval)
             : channel.maxY;
-        double? lastTitleY;
+        Rect? lastTitleRect;
 
         while (verticalSeek <= end) {
           if (grid.showGrid != false) {
@@ -491,10 +492,11 @@ class ScopeChartPainter {
               interval,
               verticalSeek,
             );
+            final titleRect = Rect.fromLTWH(x, y, tp.width, textHeight);
             final skipTitle =
-                lastTitleY != null && lastTitleY - textHeight <= y;
+                lastTitleRect != null && lastTitleRect.overlaps(titleRect);
             if (showTitle != false && skipTitle != true) {
-              lastTitleY = y;
+              lastTitleRect = titleRect;
               canvasWrapper.save();
               canvasWrapper.translate(x + tp.width / 2, y + textHeight / 2);
               canvasWrapper.rotate(utils.radians(titles.rotateAngle));
@@ -546,7 +548,38 @@ class ScopeChartPainter {
       final lastPositionOverlapsWithBorder = lastPosition == max;
       final end = lastPositionOverlapsWithBorder ? max - interval : max;
       var horizontalSeek = min + (interval - (min % interval));
-      var lastTitleX = 0.0;
+      Rect? lastTitleRect;
+      Rect? cursorRect;
+
+      if (data.cursorData.show && data.cursorValue != null) {
+        var x = _getPixelX(data.cursorValue!, data.minX, data.maxX, holder)
+            .clamp(_dimensions.chartRect.left, _dimensions.chartRect.right);
+        var y = _dimensions.chartRect.bottom;
+        final span = TextSpan(
+            style: titles.textStyle, text: titles.getTitles(horizontalSeek));
+        final tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.center,
+          textDirection: titles.textDirection,
+          textScaleFactor: holder.textScale,
+        );
+        tp.layout();
+        final textWidth = tp.width + titles.padding;
+        canvasWrapper.drawLine(
+            Offset(x, y), Offset(x, y + titles.margin / 2), _strokePainter);
+
+        x -= textWidth / 2;
+        y += titles.margin;
+        cursorRect = Rect.fromLTWH(x, y, textWidth, tp.height);
+
+        canvasWrapper.save();
+        canvasWrapper.translate(x + textWidth / 2, y + tp.height / 2);
+        canvasWrapper.rotate(utils.radians(titles.rotateAngle));
+        canvasWrapper.translate(-(x + textWidth / 2), -(y + tp.height / 2));
+        x += utils.translateRotatedPosition(textWidth, titles.rotateAngle);
+        canvasWrapper.drawText(tp, Offset(x, y));
+        canvasWrapper.restore();
+      }
 
       while (horizontalSeek <= end) {
         if (grid.showGrid) {
@@ -580,7 +613,7 @@ class ScopeChartPainter {
           tp.layout();
           final textWidth = tp.width + titles.padding;
           var x = _getPixelX(horizontalSeek, min, max, holder);
-          var y = _dimensions.chartRect.height;
+          var y = _dimensions.chartRect.bottom;
 
           canvasWrapper.drawLine(
               Offset(x, y), Offset(x, y + titles.margin / 2), _strokePainter);
@@ -594,10 +627,13 @@ class ScopeChartPainter {
             interval,
             horizontalSeek,
           );
+          final titleRect = Rect.fromLTWH(x, y, textWidth, tp.height);
           final skipTitle =
-              lastTitleX + textWidth > x || x > _dimensions.chartRect.width;
+              (lastTitleRect != null && titleRect.overlaps(lastTitleRect)) ||
+                  (cursorRect != null && titleRect.overlaps(cursorRect)) ||
+                  x > (_dimensions.chartRect.width);
           if (showTitle != false && skipTitle != true) {
-            lastTitleX = x;
+            lastTitleRect = titleRect;
             canvasWrapper.save();
             canvasWrapper.translate(x + textWidth / 2, y + tp.height / 2);
             canvasWrapper.rotate(utils.radians(titles.rotateAngle));

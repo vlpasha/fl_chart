@@ -16,7 +16,9 @@ import 'scope_chart_data.dart';
 class ScopeInteractionDetails {
   final double timeStart;
   final double timeEnd;
-  ScopeInteractionDetails({required this.timeStart, required this.timeEnd});
+  final double? cursor;
+  ScopeInteractionDetails(
+      {required this.timeStart, required this.timeEnd, required this.cursor});
 }
 
 typedef ScopeInteractionCallback = void Function(
@@ -37,9 +39,8 @@ class ScopeStaticViewer extends StatefulWidget {
     this.axisControl = true,
     this.zoomAreaData,
     this.cursorData,
-    this.onInteractionStart,
-    this.onInteractionUpdate,
-    this.onInteractionEnd,
+    this.onCursorUpdate,
+    this.onTimelineUpdate,
   })  : minTimeWindow = minTimeWindow.toDouble(),
         timeWindow = timeWindow.toDouble(),
         timeStart = timeStart.toDouble(),
@@ -56,9 +57,8 @@ class ScopeStaticViewer extends StatefulWidget {
   final ScopeZoomAreaData? zoomAreaData;
   final ScopeCursorData? cursorData;
 
-  final ScopeInteractionCallback? onInteractionStart;
-  final ScopeInteractionCallback? onInteractionUpdate;
-  final ScopeInteractionCallback? onInteractionEnd;
+  final ScopeInteractionCallback? onCursorUpdate;
+  final ScopeInteractionCallback? onTimelineUpdate;
   final bool panEnabled;
   final bool scaleEnabled;
   final bool axisControl;
@@ -111,8 +111,9 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
       _timeWindow = widget.timeEnd - _currentTime;
     }
 
-    if (widget.onInteractionUpdate != null) {
-      widget.onInteractionUpdate!(ScopeInteractionDetails(
+    if (widget.onTimelineUpdate != null) {
+      widget.onTimelineUpdate!(ScopeInteractionDetails(
+        cursor: _cursorTime,
         timeStart: _currentTime,
         timeEnd: _currentTime + _timeWindow,
       ));
@@ -129,12 +130,18 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
       newTime = widget.timeEnd - _timeWindow;
     }
 
-    setState(() {
-      _currentTime = newTime.roundToDouble();
-    });
-  }
+    _currentTime = newTime.roundToDouble();
 
-  void _onZoom() {}
+    if (widget.onTimelineUpdate != null) {
+      widget.onTimelineUpdate!(ScopeInteractionDetails(
+        cursor: _cursorTime,
+        timeStart: _currentTime,
+        timeEnd: _currentTime + _timeWindow,
+      ));
+    }
+
+    setState(() {});
+  }
 
   // Handle mousewheel scroll events.
   void _onMouseScroll({ScopePointerEvent? pointerEvent, dynamic details}) {
@@ -187,17 +194,33 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
         newTime = widget.timeEnd - _timeWindow;
       }
 
-      setState(() {
-        _currentTime = newTime.roundToDouble();
-      });
+      _currentTime = newTime.roundToDouble();
+
+      if (widget.onTimelineUpdate != null) {
+        widget.onTimelineUpdate!(ScopeInteractionDetails(
+          cursor: _cursorTime,
+          timeStart: _currentTime,
+          timeEnd: _currentTime + _timeWindow,
+        ));
+      }
+
+      setState(() {});
     }
     if (pointerEvent.target == ScopePointerEventTarget.chart) {
       final pointerX = pointerEvent.event.localPosition.dx;
       final posPercent = (pointerX - pointerEvent.chartRect.left) /
           pointerEvent.chartRect.width;
-      setState(() {
-        _cursorTime = (_currentTime + posPercent * _timeWindow).roundToDouble();
-      });
+      _cursorTime = (_currentTime + posPercent * _timeWindow).roundToDouble();
+
+      if (widget.onCursorUpdate != null) {
+        widget.onTimelineUpdate!(ScopeInteractionDetails(
+          cursor: _cursorTime,
+          timeStart: _currentTime,
+          timeEnd: _currentTime + _timeWindow,
+        ));
+      }
+
+      setState(() {});
     }
   }
 
@@ -218,13 +241,6 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
       _gestureType = _GestureType.scale;
     } else {
       _gestureType = _GestureType.vertical;
-    }
-
-    if (widget.onInteractionStart != null) {
-      widget.onInteractionStart!(ScopeInteractionDetails(
-        timeStart: _currentTime,
-        timeEnd: _currentTime + _timeWindow,
-      ));
     }
   }
 
@@ -278,10 +294,10 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
     }
     if (pointerEvent.target == ScopePointerEventTarget.zoomarea) {
       final pointerX = pointerEvent.event.localPosition.dx;
-      final delta = widget.zoomAreaData!.max - widget.zoomAreaData!.min;
+      final delta = widget.timeEnd - widget.timeStart;
       final posPercent = (pointerX - pointerEvent.zoomRect!.left) /
           pointerEvent.zoomRect!.width;
-      _zoomStart = _zoomEnd = widget.zoomAreaData!.min + posPercent * delta;
+      _zoomStart = _zoomEnd = widget.timeStart + posPercent * delta;
     }
   }
 
@@ -300,12 +316,15 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
     }
 
     if (pointerEvent.target == ScopePointerEventTarget.zoomarea) {
-      final interval = (widget.zoomAreaData!.max - widget.zoomAreaData!.min) /
-          pointerEvent.zoomRect!.width;
-      _zoomEnd += (interval * details.primaryDelta);
+      final pointerX = (details as DragUpdateDetails).localPosition.dx -
+          (pointerEvent.viewRect.width - pointerEvent.zoomRect!.width);
+      final delta = widget.timeEnd - widget.timeStart;
+      final posPercent = pointerX / pointerEvent.zoomRect!.width;
+      var _zoomEnd = widget.timeStart + posPercent * delta;
 
       var newTime = (_zoomStart > _zoomEnd ? _zoomEnd : _zoomStart)
           .clamp(widget.timeStart, widget.timeEnd);
+
       var newTimeWindow =
           _zoomStart > _zoomEnd ? _zoomStart - _zoomEnd : _zoomEnd - _zoomStart;
 
@@ -313,10 +332,18 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
         newTimeWindow = widget.timeEnd - newTime;
       }
 
-      setState(() {
-        _currentTime = newTime.roundToDouble();
-        _timeWindow = newTimeWindow.roundToDouble();
-      });
+      _currentTime = newTime;
+      _timeWindow = newTimeWindow;
+
+      if (widget.onTimelineUpdate != null) {
+        widget.onTimelineUpdate!(ScopeInteractionDetails(
+          cursor: _cursorTime,
+          timeStart: _currentTime,
+          timeEnd: _currentTime + _timeWindow,
+        ));
+      }
+
+      setState(() {});
     }
   }
 
@@ -372,13 +399,6 @@ class _ScopeStaticViewerState extends State<ScopeStaticViewer>
       _animationController.reset();
       _gestureType = null;
       _pan = 0.0;
-
-      if (widget.onInteractionEnd != null) {
-        widget.onInteractionEnd!(ScopeInteractionDetails(
-          timeStart: _currentTime,
-          timeEnd: _currentTime + _timeWindow,
-        ));
-      }
       return;
     }
 

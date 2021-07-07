@@ -13,9 +13,11 @@ class ScopePointerEvent {
   PointerEvent event;
   ScopePointerEventTarget? target;
   Rect chartRect;
+  Rect viewRect;
   Rect? zoomRect;
   ScopePointerEvent({
     required this.event,
+    required this.viewRect,
     required this.chartRect,
     this.zoomRect,
     this.target,

@@ -454,46 +454,47 @@ class _ScopeChartState extends State<ScopeChart>
   Widget build(BuildContext context) {
     _updateChannels();
 
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        dragStartBehavior: DragStartBehavior.start,
-        onTap: widget.onTap != null
-            ? () {
-                widget.onTap!(pointerEvent: _lastEvent);
-                _lastEvent = null;
-              }
-            : () => _lastEvent = null,
-        onScaleStart: widget.onScaleStart != null
-            ? (details) =>
-                widget.onScaleStart!(pointerEvent: _lastEvent, details: details)
-            : null,
-        onScaleUpdate: widget.onScaleUpdate != null
-            ? (details) => widget.onScaleUpdate!(
-                pointerEvent: _lastEvent, details: details)
-            : null,
-        onScaleEnd: widget.onScaleEnd != null
-            ? (details) {
-                widget.onScaleEnd!(pointerEvent: _lastEvent, details: details);
-                _lastEvent = null;
-              }
-            : (_) => _lastEvent = null,
-        onHorizontalDragStart: widget.onHorizontalDragStart != null
-            ? (details) => widget.onHorizontalDragStart!(
-                pointerEvent: _lastEvent, details: details)
-            : null,
-        onHorizontalDragUpdate: widget.onHorizontalDragUpdate != null
-            ? (details) => widget.onHorizontalDragUpdate!(
-                pointerEvent: _lastEvent, details: details)
-            : null,
-        onHorizontalDragEnd: widget.onHorizontalDragEnd != null
-            ? (details) {
-                widget.onHorizontalDragEnd!(
-                    pointerEvent: _lastEvent, details: details);
-                _lastEvent = null;
-              }
-            : (_) => _lastEvent = null,
-        child: Padding(
-          padding: widget.padding,
+    return Padding(
+        padding: widget.padding,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          dragStartBehavior: DragStartBehavior.start,
+          onTap: widget.onTap != null
+              ? () {
+                  widget.onTap!(pointerEvent: _lastEvent);
+                  _lastEvent = null;
+                }
+              : () => _lastEvent = null,
+          onScaleStart: widget.onScaleStart != null
+              ? (details) => widget.onScaleStart!(
+                  pointerEvent: _lastEvent, details: details)
+              : null,
+          onScaleUpdate: widget.onScaleUpdate != null
+              ? (details) => widget.onScaleUpdate!(
+                  pointerEvent: _lastEvent, details: details)
+              : null,
+          onScaleEnd: widget.onScaleEnd != null
+              ? (details) {
+                  widget.onScaleEnd!(
+                      pointerEvent: _lastEvent, details: details);
+                  _lastEvent = null;
+                }
+              : (_) => _lastEvent = null,
+          onHorizontalDragStart: widget.onHorizontalDragStart != null
+              ? (details) => widget.onHorizontalDragStart!(
+                  pointerEvent: _lastEvent, details: details)
+              : null,
+          onHorizontalDragUpdate: widget.onHorizontalDragUpdate != null
+              ? (details) => widget.onHorizontalDragUpdate!(
+                  pointerEvent: _lastEvent, details: details)
+              : null,
+          onHorizontalDragEnd: widget.onHorizontalDragEnd != null
+              ? (details) {
+                  widget.onHorizontalDragEnd!(
+                      pointerEvent: _lastEvent, details: details);
+                  _lastEvent = null;
+                }
+              : (_) => _lastEvent = null,
           child:
               widget.realTime ? _realTimeScope(context) : _staticScope(context),
         ));
